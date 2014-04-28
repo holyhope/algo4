@@ -1,6 +1,6 @@
 package fr.upem.pperonne.caterer;
 
-public class ArcFlow<N extends Node> extends Arc<N> {
+public class ArcFlow<N extends NodeInt> extends Arc<N> {
 	private Integer capacity = Integer.MAX_VALUE, min = Integer.MIN_VALUE;
 
 	public ArcFlow(

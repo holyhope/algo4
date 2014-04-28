@@ -1,15 +1,12 @@
 package fr.upem.pperonne.caterer;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
-public class Graph <N extends Node,A extends Arc<N>> {
+public class Graph <N extends Node<?>,A extends Arc<N>> {
 	protected ArrayList<N> nodes = new ArrayList<N>();
 	protected ArrayList<A> arcs = new ArrayList<A>();
 
@@ -22,7 +19,7 @@ public class Graph <N extends Node,A extends Arc<N>> {
 		}
 		int nbSommet = scan.nextInt();
 		for ( int i = 0; i < nbSommet; i++ ) {
-			add( (N) new Node( scan, "S" + i ) );
+			add( (N) new NodeInt( scan, "S" + i ) );
 		}
 		List<N> nodes = new ArrayList<>();
 		nodes.addAll( this.nodes );
@@ -126,7 +123,7 @@ public class Graph <N extends Node,A extends Arc<N>> {
 		return string.toString();
 	}
 	
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	private <E> E next( ArrayList<E> visited, E o ) throws IllegalStateException {
 		Node dest;
 
@@ -291,8 +288,8 @@ public class Graph <N extends Node,A extends Arc<N>> {
 		f.accept( S );
 	}
 
-	public List<Node> neighbours( N S ) {
-		List<Node> list = new ArrayList<>();
+	public List<N> neighbours( N S ) {
+		List<N> list = new ArrayList<>();
 		list.addAll( children( S ) );
 		list.addAll( parents( S ) );
 		return list;
@@ -495,25 +492,26 @@ public class Graph <N extends Node,A extends Arc<N>> {
 		return list;
 	}
 
-	public ArrayList<Node> getNodes() {
-		ArrayList<Node> list = new ArrayList<>();
+	@SuppressWarnings("unchecked")
+	public ArrayList<N> getNodes() {
+		ArrayList<N> list = new ArrayList<>();
 		for ( N s: nodes ) {
-			list.add( s.clone() );
+			list.add( (N) s.clone() );
 		}
 		return list;
 	}
 	
-	protected N get( Node node ) throws NullPointerException {
+	protected N get( N node ) throws NullPointerException {
 		Objects.requireNonNull( node );
 		for ( N S: nodes ) {
 			if ( node.equals( S ) ) {
 				return S;
 			}
-			System.out.println( "\tnon" );
 		}
 		return null;
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected A get( Arc<Node> arc ) throws NullPointerException {
 		Objects.requireNonNull( arc );
 		for ( A A: arcs ) {
@@ -524,97 +522,7 @@ public class Graph <N extends Node,A extends Arc<N>> {
 		return null;
 	}
 
-	public List<Node> needs() {
-		List<Node> nodes = new ArrayList<>();
-
-		for ( N S: this.nodes ) {
-			if ( S.getDegree() > 0 ) {
-				nodes.add( S.clone() );
-			}
-		}
-		Collections.sort( nodes, new Comparator<Node>() {
-			@Override
-			public int compare( Node s1, Node s2 ) {
-				return s1.getDegree() - s2.getDegree();
-			}
-		} );
-
-		return nodes;
-	}
-
-	public List<Node> offres() {
-		List<Node> nodes = new ArrayList<>();
-
-		for ( Node S: this.nodes ) {
-			if ( S.getDegree() < 0 ) {
-				nodes.add( S.clone() );
-			}
-		}
-
-		return nodes;
-	}
-
-	public List<N> needsLocal() {
-		List<N> nodes = new ArrayList<>();
-
-		for ( N S: this.nodes ) {
-			if ( S.getDegree() > 0 ) {
-				nodes.add( S );
-			}
-		}
-		Collections.sort( nodes, new Comparator<Node>() {
-			@Override
-			public int compare( Node s1, Node s2 ) {
-				return s1.getDegree() - s2.getDegree();
-			}
-		} );
-
-		return nodes;
-	}
-
-	public List<N> offresLocal() {
-		List<N> nodes = new ArrayList<>();
-
-		for ( N S: this.nodes ) {
-			if ( S.getDegree() < 0 ) {
-				nodes.add( S );
-			}
-		}
-
-		return nodes;
-	}
-	
-	public int degreeTotal() {
-		int total = 0;
-		for ( Node S: nodes ) {
-			total += S.getDegree();
-		}
-		return total;
-	}
-
-	public int offreTotal() {
-		int total = 0, degree;
-		for ( Node S: nodes ) {
-			degree = S.getDegree();
-			if ( degree > 0 ) {
-				total += degree;
-			}
-		}
-		return total;
-	}
-
-	public int needsTotal() {
-		int total = 0, degree;
-		for ( Node S: nodes ) {
-			degree = S.getDegree();
-			if ( degree < 0 ) {
-				total += degree;
-			}
-		}
-		return -total;
-	}
-
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public boolean equals( Object o ) {
 		if ( ! ( o instanceof Graph ) ) {
@@ -633,8 +541,8 @@ public class Graph <N extends Node,A extends Arc<N>> {
 			return false;
 		}
 
-		ArrayList<Arc<Node>> arcs = new ArrayList<>();
-		arcs.addAll( (Collection<Arc<Node>>) this.arcs );
+		ArrayList<A> arcs = new ArrayList<>();
+		arcs.addAll( this.arcs );
 		arcs.removeAll( G.arcs );
 
 		return arcs.size() == 0;

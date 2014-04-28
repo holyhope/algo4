@@ -15,10 +15,10 @@ import fr.upem.pperonne.caterer.Arc;
 import fr.upem.pperonne.caterer.Graph;
 import fr.upem.pperonne.caterer.Node;
 
-@SuppressWarnings("serial")
+@SuppressWarnings({ "serial", "rawtypes" })
 public class ContentSwing extends Container implements MouseMotionListener {
 	private final Graph<?,?> graph;
-	private int poidsMax, poidsMin, coutMax;
+	private int /*poidsMax, poidsMin,*/ coutMax;
 	private Point min = new Point( 0, 0 ), max = new Point( 1, 1 );
 	private static Dimension dimensionSommet = new Dimension( 30, 20 );
 	private String title;
@@ -42,16 +42,16 @@ public class ContentSwing extends Container implements MouseMotionListener {
 
 	private boolean hasNode( Node S ) {
 		for ( Component component: getComponents() ) {
-			if ( component instanceof DisplaySommet && ((DisplaySommet) component).isNode( S ) ) {
+			if ( component instanceof DisplayNode && ((DisplayNode) component).isNode( S ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private DisplaySommet updateList( Node S ) {
+	private DisplayNode updateList( Node S ) {
 		if ( ! hasNode( S ) ) {
-			DisplaySommet ds = new DisplaySommet( S, getSize() );
+			DisplayNode ds = new DisplayNode( S, getSize() );
 			ds.addMouseMotionListener( this );
 			add( ds );
 			ds.setSize( dimensionSommet );
@@ -59,7 +59,7 @@ public class ContentSwing extends Container implements MouseMotionListener {
 		}
 		return getDisplayNode( S );
 	}
-
+/*
 	private void updateMinMaxPoids( int poids ) {
 		if ( poidsMin > poidsMax ) {
 			poidsMin = poids;
@@ -69,17 +69,17 @@ public class ContentSwing extends Container implements MouseMotionListener {
 			poidsMax = Math.max( poidsMax, poids );
 		}
 	}
-
+*/
 	@SuppressWarnings("unchecked")
 	public synchronized void actionPerformed( ActionEvent e ) {
-		poidsMax = 0;
+	/*	poidsMax = 0;
 		poidsMin = 1;
-		min = max = null;
-		DisplaySommet ds;
+	*/	min = max = null;
+		DisplayNode ds;
 		for ( Node S: graph.getNodes() ) {
 			ds = updateList( S );
 			updateMinMaxCoords( ds.getLocation() );
-			updateMinMaxPoids( S.getDegree() );
+		//	updateMinMaxPoids( S.getDegree() );
 		}
 
 		coutMax = 1;
@@ -106,18 +106,18 @@ public class ContentSwing extends Container implements MouseMotionListener {
 		graphics.drawImage( img, 0, 0, this );
 	}
 
-	private DisplaySommet getDisplayNode( Node S ) throws IllegalArgumentException {
+	private DisplayNode getDisplayNode( Node S ) throws IllegalArgumentException {
 		for ( Component component: getComponents() ) {
-			if ( component instanceof DisplaySommet &&
-					((DisplaySommet) component).isNode( S )
+			if ( component instanceof DisplayNode &&
+					((DisplayNode) component).isNode( S )
 				) {
-				return (DisplaySommet) component;
+				return (DisplayNode) component;
 			}
 		}
 		throw new IllegalArgumentException( "Le sommet n'a pas encore été enregistré" );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "unchecked" })
 	private void paintArcs(
 			Graphics graphics,
 			ArrayList<Arc> arrayList
@@ -132,7 +132,7 @@ public class ContentSwing extends Container implements MouseMotionListener {
 	}
 
 	private void paintArc( Graphics graphics, Arc<Node> arc ) throws IllegalArgumentException {
-		DisplaySommet origine = getDisplayNode( arc.getOrigine() ),
+		DisplayNode origine = getDisplayNode( arc.getOrigine() ),
 			destination = getDisplayNode( arc.getDestination() );
 		Dimension dimensionOri = origine.getSize(),
 			dimensionDest = destination.getSize();
@@ -175,14 +175,26 @@ public class ContentSwing extends Container implements MouseMotionListener {
 	@Override
 	public void mouseDragged( MouseEvent e ) {
 		Object o = e.getSource();
-		if ( o instanceof DisplaySommet ) {
-			DisplaySommet ds = (DisplaySommet) o;
+		if ( o instanceof DisplayNode ) {
+			DisplayNode ds = (DisplayNode) o;
 			Dimension dim = ds.getSize();
 			Point position = ds.getLocation();
-			ds.setLocation( new Point(
-				position.x + e.getX() - dim.width  / 2,
-				position.y + e.getY() - dim.height / 2
-			) );
+			Dimension limit = getSize();
+			limit.width -= dim.width;
+			limit.height -= dim.height;
+			position.x += e.getX() - dim.width  / 2;
+			position.y += e.getY() - dim.height / 2;
+			if ( position.x < 0 ) {
+				position.x = 0;
+			} else if ( position.x > limit.width ) {
+				position.x = limit.width;
+			}
+			if ( position.y < 0 ) {
+				position.y = 0;
+			} else if ( position.y > limit.height ) {
+				position.y = limit.height;
+			}
+			ds.setLocation( position );
 		}
 	}
 

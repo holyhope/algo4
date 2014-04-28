@@ -7,25 +7,25 @@ import java.util.HashMap;
 import java.util.List;
 
 public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
-	private final Graph<Node,Arc<Node>> origine;
+	private final Graph<NodeInt,Arc<NodeInt>> origine;
 	private ArrayList<ArcFlow<NodeFlow>> inBase, outBase;
 
-	public GraphFlow( Graph<Node,Arc<Node>> origine ) {
+	public GraphFlow( Graph<NodeInt,Arc<NodeInt>> origine ) {
 		this.origine = origine;
 		reset();
 	}
 
 	private void reset() {
-		HashMap<Node, NodeFlow> hashmap = new HashMap<>();
+		HashMap<NodeInt, NodeFlow> hashmap = new HashMap<>();
 
 		NodeFlow nf;
-		for ( Node n: origine.nodes ) {
+		for ( NodeInt n: origine.nodes ) {
 			nf = new NodeFlow( n );
 			add( nf );
 			hashmap.put( n, nf );
 		}
 
-		for ( Arc<Node> arc: origine.arcs ) {
+		for ( Arc<NodeInt> arc: origine.arcs ) {
 			add( new ArcFlow<NodeFlow>(
 				hashmap.get( arc.origine ),
 				hashmap.get( arc.destination ),
@@ -33,9 +33,9 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
 			) );
 		}
 
-		Collections.sort( nodes, new Comparator<Node>() {
+		Collections.sort( nodes, new Comparator<NodeInt>() {
 			@Override
-			public int compare( Node s1, Node s2 ) {
+			public int compare( NodeInt s1, NodeInt s2 ) {
 				return s2.getDegree() - s1.getDegree();
 			}
 		} );
@@ -103,11 +103,6 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
 		return true;
 	}
 
-	private void run() {
-		while ( ! isOptimal() ) {
-			//TODO Améliorer le graphe
-		}
-	}
 
 	private void updateBases() {
 		inBase = new ArrayList<>();
@@ -123,6 +118,98 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
 
 	public void start() {
 		//TODO: firstSolution();
-		run();
+		while ( ! isOptimal() ) {
+			//TODO Améliorer le graphe
+		}
+	}
+
+	public List<NodeInt> needs() {
+		List<NodeInt> nodes = new ArrayList<>();
+
+		for ( NodeFlow S: this.nodes ) {
+			if ( S.getDegree() > 0 ) {
+				nodes.add( S.clone() );
+			}
+		}
+		Collections.sort( nodes, new Comparator<NodeInt>() {
+			@Override
+			public int compare( NodeInt s1, NodeInt s2 ) {
+				return s1.getDegree() - s2.getDegree();
+			}
+		} );
+
+		return nodes;
+	}
+
+	public List<NodeInt> offres() {
+		List<NodeInt> nodes = new ArrayList<>();
+
+		for ( NodeInt S: this.nodes ) {
+			if ( S.getDegree() < 0 ) {
+				nodes.add( S.clone() );
+			}
+		}
+
+		return nodes;
+	}
+
+	public List<NodeFlow> needsLocal() {
+		List<NodeFlow> nodes = new ArrayList<>();
+
+		for ( NodeFlow S: this.nodes ) {
+			if ( S.getDegree() > 0 ) {
+				nodes.add( S );
+			}
+		}
+		Collections.sort( nodes, new Comparator<NodeFlow>() {
+			@Override
+			public int compare( NodeFlow s1, NodeFlow s2 ) {
+				return s1.getDegree() - s2.getDegree();
+			}
+		} );
+
+		return nodes;
+	}
+
+	public List<NodeFlow> offresLocal() {
+		List<NodeFlow> nodes = new ArrayList<>();
+
+		for ( NodeFlow S: this.nodes ) {
+			if ( S.getDegree() < 0 ) {
+				nodes.add( S );
+			}
+		}
+
+		return nodes;
+	}
+
+	public int offreTotal() {
+		int total = 0, degree;
+		for ( NodeFlow S: nodes ) {
+			degree = S.getDegree();
+			if ( degree > 0 ) {
+				total += degree;
+			}
+		}
+		return total;
+	}
+
+	public int needsTotal() {
+		int total = 0, degree;
+		for ( NodeFlow S: nodes ) {
+			degree = S.getDegree();
+			if ( degree < 0 ) {
+				total += degree;
+			}
+		}
+		return -total;
+	}
+	
+	public int degreeTotal() {
+		int total = 0;
+		for ( NodeFlow S: nodes ) {
+			total += S.getDegree();
+		}
+		return total;
 	}
 }

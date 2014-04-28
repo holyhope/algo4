@@ -12,15 +12,15 @@ import javax.swing.JComponent;
 
 import fr.upem.pperonne.caterer.Node;
 
-@SuppressWarnings( "serial" )
-public class DisplaySommet extends JComponent implements MouseListener {
+@SuppressWarnings({ "serial", "rawtypes" })
+public class DisplayNode extends JComponent implements MouseListener {
 	private final Node node;
 	private static Color defaultColor = Color.WHITE;
 	private static Color overColor = Color.PINK;
 	private static Color clickColor = Color.RED;
 	private Color color = defaultColor;
 
-	public DisplaySommet( Node node, Dimension range ) throws IllegalArgumentException {
+	public DisplayNode( Node node, Dimension range ) throws IllegalArgumentException {
 		if ( node == null ) {
 			throw new IllegalArgumentException( "Impossible d'afficher un sommet null." );
 		}
@@ -35,10 +35,10 @@ public class DisplaySommet extends JComponent implements MouseListener {
 
 	@Override
 	public boolean equals( Object o ) {
-		if ( ! ( o instanceof DisplaySommet ) ) {
+		if ( ! ( o instanceof DisplayNode ) ) {
 			return false;
 		}
-		return node.equals( ((DisplaySommet) o).node );
+		return node.equals( ((DisplayNode) o).node );
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class DisplaySommet extends JComponent implements MouseListener {
 			dimensionSommet.height
 		);
 
-		String poids = new String( node.getDegree() + "" );
+		String poids = new String( node.get() + "" );
 		char[] name = poids.toCharArray();
 		graphics.setColor( def );
 		int width = graphics.getFontMetrics().charsWidth( name, 0, name.length );

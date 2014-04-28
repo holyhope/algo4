@@ -7,7 +7,9 @@ import org.junit.Test;
 
 import fr.upem.pperonne.caterer.Node;
 
+@SuppressWarnings("rawtypes")
 public class TestNode extends Node {
+	@SuppressWarnings("unchecked")
 	@Test
 	public void equals() {
 		Node s0 = new Node(),

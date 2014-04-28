@@ -1,7 +1,7 @@
 package fr.upem.pperonne.caterer;
 
 
-public class NodeFlow extends Node {
+public class NodeFlow extends NodeInt {
 	public NodeFlow( int poids ) {
 		super( poids );
 	}
@@ -10,7 +10,7 @@ public class NodeFlow extends Node {
 		super();
 	}
 	
-	public NodeFlow( Node n ) throws NullPointerException {
+	public NodeFlow( NodeInt n ) throws NullPointerException {
 		super( n );
 	}
 

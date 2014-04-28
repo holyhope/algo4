@@ -23,7 +23,7 @@ public class TestGraph extends Graph {
 	@Test(expected=IllegalArgumentException.class)
 	public void addTwiceSommet() {
 		Node s = new Node();
-		Graph G = new Graph();
+		Graph<Node,Arc<Node>> G = new Graph<Node,Arc<Node>>();
 		G.add( s );
 		G.add( s );
 	}

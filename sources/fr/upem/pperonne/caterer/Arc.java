@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Arc<N extends Node> {
+@SuppressWarnings("rawtypes")
+public class Arc<N extends Node<?>> {
 	protected final N origine;
 	protected N destination;
 	private int cout;
@@ -101,7 +102,6 @@ public class Arc<N extends Node> {
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public boolean equals( Object o ) {
 		if ( ! ( o instanceof Arc ) ) {
 			return false;

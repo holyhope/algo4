@@ -1,11 +1,11 @@
 package fr.upem.pperonne.caterer;
 
-public class ArcFlow<N extends NodeInt> extends Arc<N> {
+public class ArcFlow extends Arc<NodeFlow> {
 	private Integer capacity = Integer.MAX_VALUE, min = Integer.MIN_VALUE;
 
 	public ArcFlow(
-			N origine,
-			N destination,
+			NodeFlow origine,
+			NodeFlow destination,
 			int cout,
 			int min,
 			int capacity
@@ -15,8 +15,8 @@ public class ArcFlow<N extends NodeInt> extends Arc<N> {
 	}
 
 	public ArcFlow(
-			N origine,
-			N destination,
+			NodeFlow origine,
+			NodeFlow destination,
 			int cout,
 			int capacity
 		) throws IllegalArgumentException {
@@ -25,14 +25,14 @@ public class ArcFlow<N extends NodeInt> extends Arc<N> {
 	}
 
 	public ArcFlow(
-			N origine,
-			N destination,
+			NodeFlow origine,
+			NodeFlow destination,
 			int cout
 		) throws IllegalArgumentException {
 		super( origine, destination, cout );
 	}
 	
-	public ArcFlow( Arc<N> arc ) {
+	public ArcFlow( Arc<NodeFlow> arc ) {
 		super( arc );
 	}
 
@@ -52,7 +52,7 @@ public class ArcFlow<N extends NodeInt> extends Arc<N> {
 	}
 	
 	@Override
-	protected Arc<N> clone() {
-		return new ArcFlow<N>( getOrigine(), getDestination(), getCout(), min, capacity );
+	protected ArcFlow clone() {
+		return new ArcFlow( getOrigine(), getDestination(), getCout(), min, capacity );
 	}
 }

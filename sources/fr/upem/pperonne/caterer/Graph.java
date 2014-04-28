@@ -424,19 +424,47 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return false;
 	}
 
+	public boolean isCyclicNoSens() {
+		for ( N S: nodes ) {
+			if ( isCyclicNoSens( null, S, new ArrayList<N>() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean isCyclic( N s, ArrayList<N> visitedNodes ) {
 		if ( neighbours( s ).size() == 0 ){
 			return false;
 		}
-		ArrayList<N> NVisited = new ArrayList<>();
-		NVisited.addAll( visitedNodes );
-		NVisited.add( s );
-
+		ArrayList<N> visisted = new ArrayList<>();
+		visisted.addAll( visitedNodes );
+		visisted.add( s );
 		for ( N n: childrenLocal( s ) ) {
-			if ( NVisited.contains( n ) ){
+			if ( visisted.contains( n ) ){
 				return true;
 			}
-			if ( isCyclic( n, NVisited ) ) {
+			if ( isCyclic( n, visisted ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isCyclicNoSens( A previous, N s, ArrayList<N> visitedNodes ) {
+		if ( neighbours( s ).size() == 0 ){
+			return false;
+		}
+		ArrayList<N> visisted = new ArrayList<>();
+		ArrayList<A> neighbours = outArcsLocal( s );
+		N n;
+		visisted.addAll( visitedNodes );
+		visisted.add( s );
+		neighbours.remove( previous );
+		for ( A a: neighbours ) {
+			n = a.destination;
+			if ( visisted.contains( n ) ||
+					isCyclicNoSens( a, n, visisted ) ) {
 				return true;
 			}
 		}
@@ -546,5 +574,13 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		arcs.removeAll( G.arcs );
 
 		return arcs.size() == 0;
+	}
+	
+	@Override
+	protected Graph<N,A> clone() {
+		Graph<N,A> g = new Graph<>();
+		g.add( getArcs() );
+		g.add( getNodes() );
+		return g;
 	}
 }

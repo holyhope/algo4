@@ -6,29 +6,23 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
-	private final Graph<NodeInt,Arc<NodeInt>> origine;
-	private ArrayList<ArcFlow<NodeFlow>> inBase, outBase;
+public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
+	private final GraphFlow origine;
 
 	public GraphFlow( Graph<NodeInt,Arc<NodeInt>> origine ) {
-		this.origine = origine;
-		reset();
-	}
-
-	private void reset() {
-		HashMap<NodeInt, NodeFlow> hashmap = new HashMap<>();
+		HashMap<NodeInt, NodeFlow> link = new HashMap<>();
 
 		NodeFlow nf;
 		for ( NodeInt n: origine.nodes ) {
 			nf = new NodeFlow( n );
 			add( nf );
-			hashmap.put( n, nf );
+			link.put( n, nf );
 		}
 
 		for ( Arc<NodeInt> arc: origine.arcs ) {
-			add( new ArcFlow<NodeFlow>(
-				hashmap.get( arc.origine ),
-				hashmap.get( arc.destination ),
+			add( new ArcFlow(
+				link.get( arc.origine ),
+				link.get( arc.destination ),
 				arc.getCout()
 			) );
 		}
@@ -39,87 +33,36 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
 				return s2.getDegree() - s1.getDegree();
 			}
 		} );
+
+		this.origine = this.clone();
 	}
 
-	@SuppressWarnings("unused")
-	private Graph<NodeFlow,ArcFlow<NodeFlow>> firstSolutionOld() {
-		Graph<NodeFlow,ArcFlow<NodeFlow>> origine = new Graph<>();
-		int totalOffre = offreTotal(),
-			totalNeeds = needsTotal(),
-			totalOffreTmp, totalNeedsTmp;
-
-		origine.add( nodes );
-		origine.add( arcs );
-
-		ArrayList<ArcFlow<NodeFlow>> arcs = new ArrayList<>();
-		for ( ArcFlow<NodeFlow> arc: this.arcs ) {
-			arcs.add( new ArcFlow<NodeFlow>( arc ) );
-		}
-		this.arcs = arcs;
-
-		NodeFlow voisin;
-		List<NodeFlow> offre, demande;
-		int envoye, demandeRestante, offreRestante;
-
-		do {
-			offre = offresLocal();
-			demande = needsLocal();
-			totalOffreTmp = totalOffre;
-			totalNeedsTmp = totalNeeds;
-
-			for ( NodeFlow S: offre ) {
-				for ( ArcFlow<NodeFlow> A: outArcsLocal( S ) ) {
-					voisin = get( A.getDestination() );
-					if ( demande.contains( voisin ) ) {
-						offreRestante = -S.getDegree();
-						demandeRestante = voisin.getDegree();
-						envoye = Math.min(
-							demandeRestante,
-							offreRestante
-						);
-						offreRestante -= envoye;
-						S.setDegree( -offreRestante );
-
-						demandeRestante -= envoye;
-						voisin.setDegree( demandeRestante );
-						if ( demandeRestante == 0 ) {
-							demande.remove( voisin );
-						}
-						A.setCout( envoye );
-						totalOffreTmp -= envoye;
-						totalNeedsTmp -= envoye;
-					}
-				}
-			}
-		} while ( totalOffreTmp != 0 || totalNeedsTmp != 0 );
-
-		return origine;
-	}
-
-	private boolean isOptimal() {
-		for ( ArcFlow<NodeFlow> arc: outBase ) {
-			//TODO Parcourir les arcs hors base et vérifier les contraintes
-		}
-		return true;
-	}
-
-
-	private void updateBases() {
-		inBase = new ArrayList<>();
-		outBase = new ArrayList<>();
-		for ( ArcFlow<NodeFlow> arc: arcs ) {
-			if ( arc.getCout() == 0 ) {
-				outBase.add( arc );
-			} else {
-				inBase.add( arc );
+	private ArcFlow findArcE() {
+		for ( ArcFlow e: origine.arcs ) {
+			add( new NodeFlow() );
+			if ( e.getCout() + e.getOrigine().getDegree() < e.getDestination().getDegree() &&
+					isCyclicNoSens() ) {
+				return e;
 			}
 		}
+		return null;
 	}
 
-	public void start() {
+	private ArcFlow findArcF( ArcFlow e ) {
+		return null;
+	}
+
+	public void start() throws IllegalStateException {
+		if ( 0 != degreeTotal() ) {
+			throw new IllegalStateException( "Imposible de démarrer l'algorithme du simplexe réseau, car l'ofre n'est pas égale à la demande." );
+		}
 		//TODO: firstSolution();
-		while ( ! isOptimal() ) {
-			//TODO Améliorer le graphe
+		ArcFlow e, f;
+		while ( null != ( e = findArcE() ) ) {
+			f = findArcF( e );
+			add( e );
+			remove( f );
+			//TODO: updatePrice();
 		}
 	}
 
@@ -211,5 +154,14 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow<NodeFlow>> {
 			total += S.getDegree();
 		}
 		return total;
+	}
+	
+	@Override
+	protected GraphFlow clone() {
+		Graph<NodeInt, Arc<NodeInt>> origine = new Graph<>();
+		origine.add( origine.arcs );
+		origine.add( origine.nodes );
+		GraphFlow g = new GraphFlow( origine );
+		return g;
 	}
 }

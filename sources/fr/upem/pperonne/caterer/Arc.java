@@ -1,6 +1,5 @@
 package fr.upem.pperonne.caterer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -113,7 +112,7 @@ public class Arc<N extends Node<?>> {
 			destination.equals( a.destination );
 	}
 
-	public String toString( ArrayList<N> nodes ) {
+	public String toString( List<N> nodes ) {
 		StringBuilder string = new StringBuilder();
 		string
 			.append( nodes.indexOf( origine ) ).append( " " )

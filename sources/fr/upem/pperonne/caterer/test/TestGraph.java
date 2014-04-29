@@ -8,8 +8,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -43,21 +45,29 @@ public class TestGraph extends Graph {
 		Arc a1 = new Arc( s1, s2 ),
 			a2 = new Arc( s2, s1 );
 		Graph G = new Graph();
+
+		assertTrue( G.getNodes().size() == 0 );
 		G.add( s1 );
+		assertTrue( G.getNodes().size() == 1 );
 		assertTrue( G.getNodes().contains( s1 ) );
 		G.add( s2 );
-		assertTrue( G.getNodes().contains( s2 ) && G.getNodes().contains( s1 ) );
+		assertTrue( G.getNodes().size() == 2 );
+		assertTrue( G.getNodes().contains( s2 ) && getNodesLocalTest( G ).contains( s1 ) );
+
+		assertTrue( G.getArcs().size() == 0 );
 		G.add( a1 );
+		assertTrue( G.getArcs().size() == 1 );
 		assertTrue( G.getArcs().contains( a1 ) );
 		G.add( a2 );
+		assertTrue( G.getArcs().size() == 2 );
 		assertTrue( G.getArcs().contains( a2 ) && G.getArcs().contains( a1 ) );
 	}
 
 	@Test
 	public void parcoursPrefix() {
-		final ArrayList<Node> list = new ArrayList<>();
+		final Set<Node> list = new HashSet<>();
 		Graph G = init( 3 );
-		ArrayList<Node> nodes = G.getNodes();
+		List<Node> nodes = getNodesLocalTest( G );
 		Object[] result = nodes.toArray();
 		G.add( new Arc( nodes.get( 0 ), nodes.get( 1 ) ) );
 		G.add( new Arc( nodes.get( 1 ), nodes.get( 0 ) ) );
@@ -72,9 +82,9 @@ public class TestGraph extends Graph {
 
 	@Test
 	public void parcoursSuffix() {
-		final ArrayList<Node> list = new ArrayList<>();
+		final Set<Node> list = new HashSet<>();
 		Graph G = init( 3 );
-		ArrayList<Node> nodes = G.getNodes(), result = new ArrayList<>();
+		List<Node> nodes = getNodesLocalTest( G ), result = new ArrayList<>();
 		result.add( nodes.get( 1 ) );
 		result.add( nodes.get( 0 ) );
 		result.add( nodes.get( 2 ) );
@@ -86,7 +96,7 @@ public class TestGraph extends Graph {
 			}
 		};
 		G.runSuffix( f );
-		assertArrayEquals( result.toArray(), list.toArray() );
+		assertTrue( result.containsAll( list ) && list.containsAll( result ) );
 	}
 
 	@Test
@@ -171,7 +181,7 @@ public class TestGraph extends Graph {
 	@Test
 	public void voisins() {
 		Graph G = init( 4 );
-		ArrayList<Node> nodes = G.getNodes(),
+		List<Node> nodes = getNodesLocalTest( G ),
 			result = new ArrayList<>();
 		G.add( new Arc( nodes.get( 0 ), nodes.get( 1 ) ) );
 		G.add( new Arc( nodes.get( 1 ), nodes.get( 2 ) ) );
@@ -179,25 +189,27 @@ public class TestGraph extends Graph {
 		G.add( new Arc( nodes.get( 2 ), nodes.get( 2 ) ) );
 		result.add( nodes.get( 2 ) );
 		result.add( nodes.get( 3 ) );
-		assertArrayEquals( result.toArray(), G.children( nodes.get( 1 ) ).toArray() );
+		Set list = G.outArcs( nodes.get( 1 ) );
+		assertTrue( result.containsAll( list ) && list.containsAll( result ) );
 	}
 	
 	@Test
 	public void sorties() {
 		Graph G = init( 4 );
-		ArrayList<Node> nodes = G.getNodes();
-		ArrayList<Arc> result = new ArrayList<>();
+		List<Node> nodes = getNodesLocalTest( G );
+		List<Arc> result = new ArrayList<>();
 		result.add( new Arc( nodes.get( 1 ), nodes.get( 2 ) ) );
 		result.add( new Arc( nodes.get( 1 ), nodes.get( 3 ) ) );
 		G.add( new Arc( nodes.get( 0 ), nodes.get( 1 ) ) );
 		G.add( result.get( 0 ) );
 		G.add( result.get( 1 ) );
 		G.add( new Arc( nodes.get( 2 ), nodes.get( 2 ) ) );
-		assertArrayEquals( result.toArray(), G.outArcs( nodes.get( 1 ) ).toArray() );
+		Set list = G.outArcs( nodes.get( 1 ) );
+		assertTrue( result.containsAll( list ) && list.containsAll( result ) );
 	}
 
-	private ArrayList<Node> initNode( int nb ) {
-		ArrayList<Node> list = new ArrayList<>();
+	private HashSet<Node> initNode( int nb ) {
+		HashSet<Node> list = new HashSet<>();
 		for ( int i = 0; i < nb; i++ ) {
 			list.add( new Node( "S" + i ) );
 		}
@@ -205,7 +217,7 @@ public class TestGraph extends Graph {
 	}
 
 	private Graph init( int nbSommet ) {
-		ArrayList<Node> list = initNode( nbSommet );
+		HashSet<Node> list = initNode( nbSommet );
 		Graph G = new Graph();
 		G.add( list );
 		return G;
@@ -214,7 +226,7 @@ public class TestGraph extends Graph {
 	@Test
 	public void degrees() {
 		Graph G = init( 3 );
-		ArrayList<Node> list = G.getNodes();
+		List<Node> list = getNodesLocalTest( G );
 		Node root = list.get( 1 );
 		G.add( new Arc( list.get( 0 ), root ) );
 		G.add( new Arc( root, list.get( 2 ) ) );
@@ -223,16 +235,22 @@ public class TestGraph extends Graph {
 		assertEquals( 2, G.degreeMax() );
 		assertEquals( 0, G.degreeMin() );
 	}
+	
+	private List<Node> getNodesLocalTest( Graph G ) {
+		List<Node> list = new ArrayList<>();
+		list.addAll( G.getNodes() );
+		return list;
+	}
 
 	@Test
 	public void neighbours() {
 		Graph G = init( 4 );
-		ArrayList<Node> list = G.getNodes();
+		List<Node> list = getNodesLocalTest( G );
 		Node root = list.get( 1 );
 		G.add( new Arc( list.get( 0 ), root ) );
 		G.add( new Arc( root, list.get( 2 ) ) );
 		G.add( new Arc( list.get( 0 ), list.get( 2 ) ) );
-		List<Node> test, result = new ArrayList<>();
+		Set<Node> test, result = new HashSet<>();
 		result.add( list.get( 2 ) );
 		test = G.children( root );
 		assertTrue( result.containsAll( test ) && test.containsAll( result ) );

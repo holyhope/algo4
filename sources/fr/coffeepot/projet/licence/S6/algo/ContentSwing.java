@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.util.Set;
 
 import fr.upem.pperonne.caterer.Arc;
 import fr.upem.pperonne.caterer.Graph;
@@ -120,9 +120,9 @@ public class ContentSwing extends Container implements MouseMotionListener {
 	@SuppressWarnings({ "unchecked" })
 	private void paintArcs(
 			Graphics graphics,
-			ArrayList<Arc> arrayList
+			Set<Arc> set
 		) {
-		for ( Arc arc: arrayList ) {
+		for ( Arc arc: set ) {
 			try {
 				paintArc( graphics, arc );
 			} catch ( IllegalArgumentException e ) {

@@ -1,14 +1,18 @@
 package fr.upem.pperonne.caterer;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Graph <N extends Node<?>,A extends Arc<N>> {
-	protected ArrayList<N> nodes = new ArrayList<N>();
-	protected ArrayList<A> arcs = new ArrayList<A>();
+	protected HashSet<N> nodes = new HashSet<N>();
+	protected HashSet<A> arcs = new HashSet<A>();
 
 	public Graph() {}
 
@@ -50,7 +54,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public boolean add( ArrayList<?> list ) throws IllegalArgumentException {
+	public boolean add( Collection<?> list ) throws IllegalArgumentException {
 		boolean flag = true;
 		if ( list == null ) {
 			throw new IllegalArgumentException( "La liste de sommets à ajouter ne peut pas être null." );
@@ -84,7 +88,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public boolean remove( ArrayList<?> list ) throws IllegalArgumentException {
+	public boolean remove( Collection<?> list ) throws IllegalArgumentException {
 		boolean flag = true;
 		if ( list == null ) {
 			throw new IllegalArgumentException( "La liste de sommets à ajouter ne peut pas être null." );
@@ -117,14 +121,14 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		string.append( '\n' );
 		for ( A a: arcs ) {
-			string.append( a.toString( nodes ) ).append( '\n' );
+			string.append( a.toString( new LinkedList<N>( nodes ) ) ).append( '\n' );
 		}
 
 		return string.toString();
 	}
 	
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	private <E> E next( ArrayList<E> visited, E o ) throws IllegalStateException {
+	private <E> E next( HashSet<E> visited, E o ) throws IllegalStateException {
 		Node dest;
 
 		if ( o instanceof Node ) {
@@ -148,8 +152,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public ArrayList<A> inArcs( N node ) {
-		ArrayList<A> arcs = new ArrayList<>();
+	public Set<A> inArcs( N node ) {
+		HashSet<A> arcs = new HashSet<>();
 
 		for ( A arc: this.arcs ) {
 			if ( arc.getOrigine().equals( node ) ) {
@@ -160,8 +164,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return arcs;
 	}
 	
-	private ArrayList<A> inArcsLocal( N node ) {
-		ArrayList<A> arcs = new ArrayList<>();
+	private HashSet<A> inArcsLocal( N node ) {
+		HashSet<A> arcs = new HashSet<>();
 
 		for ( A arc: this.arcs ) {
 			if ( arc.origine.equals( node ) ) {
@@ -173,8 +177,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public ArrayList<A> outArcs( N node ) {
-		ArrayList<A> arcs = new ArrayList<>();
+	public Set<A> outArcs( N node ) {
+		HashSet<A> arcs = new HashSet<>();
 
 		for ( A arc: this.arcs ) {
 			if ( arc.getOrigine().equals( node ) ) {
@@ -185,8 +189,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return arcs;
 	}
 
-	protected ArrayList<A> outArcsLocal( N node ) {
-		ArrayList<A> arcs = new ArrayList<>();
+	protected HashSet<A> outArcsLocal( N node ) {
+		HashSet<A> arcs = new HashSet<>();
 
 		for ( A arc: this.arcs ) {
 			if ( arc.origine.equals( node ) ) {
@@ -198,20 +202,20 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	public void runPrefix( FunctionNode<N> f ) {
-		ArrayList<N> visited = new ArrayList<>();
+		HashSet<N> visited = new HashSet<>();
 		for ( N S: nodes ) {
 			runPrefix( S, f, visited );
 		}
 	}
 
 	public void runPrefix( N S, FunctionNode<N> f ) {
-		runPrefix( S, f, new ArrayList<N>() );
+		runPrefix( S, f, new HashSet<N>() );
 	}
 
 	private void runPrefix(
 			N S,
 			FunctionNode<N> f,
-			ArrayList<N> visited
+			HashSet<N> visited
 		) {
 		N T;
 
@@ -228,20 +232,20 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	public void runPrefix( FunctionArc<A> f ) {
-		ArrayList<A> visited = new ArrayList<>();
+		HashSet<A> visited = new HashSet<>();
 		for ( A a: arcs ) {
 			runPrefix( a, f, visited );
 		}
 	}
 
 	public void runPrefix( A a, FunctionArc<A> f ) {
-		runPrefix( a, f, new ArrayList<A>() );
+		runPrefix( a, f, new HashSet<A>() );
 	}
 
 	private void runPrefix(
 			A a,
 			FunctionArc<A> f,
-			ArrayList<A> visited
+			HashSet<A> visited
 		) {
 		A T;
 
@@ -258,20 +262,20 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	public void runSuffix( FunctionNode<N> f ) {
-		ArrayList<N> visited = new ArrayList<>();
+		HashSet<N> visited = new HashSet<>();
 		for ( N S: nodes ) {
 			runSuffix( S, f, visited );
 		}
 	}
 
 	public void runSuffix( N S, FunctionNode<N> f ) {
-		runSuffix( S, f, new ArrayList<N>() );
+		runSuffix( S, f, new HashSet<N>() );
 	}
 
 	private void runSuffix(
 			N S,
 			FunctionNode<N> f,
-			ArrayList<N> visited
+			HashSet<N> visited
 		) {
 		N T;
 
@@ -288,28 +292,28 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		f.accept( S );
 	}
 
-	public List<N> neighbours( N S ) {
-		List<N> list = new ArrayList<>();
+	public Set<N> neighbours( N S ) {
+		Set<N> list = new HashSet<>();
 		list.addAll( children( S ) );
 		list.addAll( parents( S ) );
 		return list;
 	}
 
-	protected ArrayList<N> neighboursLocal( N S ) {
-		ArrayList<N> list = new ArrayList<>();
+	protected HashSet<N> neighboursLocal( N S ) {
+		HashSet<N> list = new HashSet<>();
 		list.addAll( childrenLocal( S ) );
 		list.addAll( parentsLocal( S ) );
 		return list;
 	}
 
 	public boolean isAccessible( N origine, N dest ) {
-		return isAccessible( origine, dest, new ArrayList<N>() );
+		return isAccessible( origine, dest, new HashSet<N>() );
 	}
 
 	private boolean isAccessible(
 			N origine,
 			N dest,
-			ArrayList<N> visited
+			HashSet<N> visited
 		) {
 		visited.add( origine );
 
@@ -354,7 +358,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 	
 	public boolean pathExists( N origine, final N dest ) {
-		final ArrayList<Boolean> access = new ArrayList<>();
+		final HashSet<Boolean> access = new HashSet<>();
 
 		FunctionNode<N> f = new FunctionNode<N>() {
 			public void accept( N S ) {
@@ -379,8 +383,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return true;
 	}
 	
-	public List<N> parents( N node ) {
-		List<N> parents = new ArrayList<>();
+	public Set<N> parents( N node ) {
+		Set<N> parents = new HashSet<>();
 		for ( A a: arcs ) {
 			if ( a.getDestination().equals( node ) ) {
 				parents.add( a.getOrigine() );
@@ -389,16 +393,16 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return parents;
 	}
 
-	private ArrayList<N> parentsLocal( N node ) {
-		ArrayList<N> parents = new ArrayList<>();
+	private HashSet<N> parentsLocal( N node ) {
+		HashSet<N> parents = new HashSet<>();
 		for ( A a: inArcsLocal( node ) ) {
 			parents.add( a.origine );
 		}
 		return parents;
 	}
 	
-	public List<N> children( N node ) {
-		List<N> children = new ArrayList<>();
+	public Set<N> children( N node ) {
+		Set<N> children = new HashSet<>();
 		for ( A a: arcs ) {
 			if ( a.getOrigine().equals( node ) ) {
 				children.add( a.getDestination() );
@@ -407,8 +411,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return children;
 	}
 
-	private ArrayList<N> childrenLocal( N node ) {
-		ArrayList<N> parents = new ArrayList<>();
+	private HashSet<N> childrenLocal( N node ) {
+		HashSet<N> parents = new HashSet<>();
 		for ( A a: outArcsLocal( node ) ) {
 			parents.add( a.destination );
 		}
@@ -417,7 +421,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 	public boolean isCyclic() {
 		for ( N S: nodes ) {
-			if ( isCyclic( S, new ArrayList<N>() ) ) {
+			if ( isCyclic( S, new HashSet<N>() ) ) {
 				return true;
 			}
 		}
@@ -426,18 +430,18 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 	public boolean isCyclicNoSens() {
 		for ( N S: nodes ) {
-			if ( isCyclicNoSens( null, S, new ArrayList<N>() ) ) {
+			if ( isCyclicNoSens( null, S, new HashSet<N>() ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean isCyclic( N s, ArrayList<N> visitedNodes ) {
+	private boolean isCyclic( N s, HashSet<N> visitedNodes ) {
 		if ( neighbours( s ).size() == 0 ){
 			return false;
 		}
-		ArrayList<N> visisted = new ArrayList<>();
+		HashSet<N> visisted = new HashSet<>();
 		visisted.addAll( visitedNodes );
 		visisted.add( s );
 		for ( N n: childrenLocal( s ) ) {
@@ -451,12 +455,12 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return false;
 	}
 
-	private boolean isCyclicNoSens( A previous, N s, ArrayList<N> visitedNodes ) {
+	private boolean isCyclicNoSens( A previous, N s, HashSet<N> visitedNodes ) {
 		if ( neighbours( s ).size() == 0 ){
 			return false;
 		}
-		ArrayList<N> visisted = new ArrayList<>();
-		ArrayList<A> neighbours = outArcsLocal( s );
+		HashSet<N> visisted = new HashSet<>();
+		HashSet<A> neighbours = outArcsLocal( s );
 		N n;
 		visisted.addAll( visitedNodes );
 		visisted.add( s );
@@ -473,7 +477,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 	public PathArc<A> smallestPath( N origine, N dest ) {
 		PathArc<A> path = null;
-		ArrayList<A> out = outArcs( origine );
+		Set<A> out = outArcs( origine );
 		A first = null;
 
 		for ( A arc: out ) {
@@ -512,8 +516,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public ArrayList<Arc> getArcs() {
-		ArrayList<Arc> list = new ArrayList<>();
+	public Set<Arc> getArcs() {
+		Set<Arc> list = new HashSet<>();
 		for ( A arc: arcs ) {
 			list.add( arc.clone() );
 		}
@@ -521,8 +525,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public ArrayList<N> getNodes() {
-		ArrayList<N> list = new ArrayList<>();
+	public Set<N> getNodes() {
+		Set<N> list = new HashSet<>();
 		for ( N s: nodes ) {
 			list.add( (N) s.clone() );
 		}
@@ -539,8 +543,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return null;
 	}
 
-	@SuppressWarnings("rawtypes")
-	protected A get( Arc<Node> arc ) throws NullPointerException {
+	protected A get( Arc<N> arc ) throws NullPointerException {
 		Objects.requireNonNull( arc );
 		for ( A A: arcs ) {
 			if ( arc.equals( A ) ) {

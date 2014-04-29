@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 	private final GraphFlow origine;
@@ -27,13 +29,6 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 			) );
 		}
 
-		Collections.sort( nodes, new Comparator<NodeInt>() {
-			@Override
-			public int compare( NodeInt s1, NodeInt s2 ) {
-				return s2.getDegree() - s1.getDegree();
-			}
-		} );
-
 		this.origine = this.clone();
 	}
 
@@ -47,9 +42,45 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 		}
 		return null;
 	}
+	
+	private Set<ArcFlow> isolateCycle() {
+		Set<ArcFlow> useless = new HashSet<>();
+		for ( ArcFlow arc: arcs ) {
+			remove( arc );
+			if ( ! isCyclicNoSens() ) {
+				add( arc );
+			} else {
+				useless.add( arc );
+			}
+		}
+		remove( useless );
+		return useless;
+	}
 
 	private ArcFlow findArcF( ArcFlow e ) {
-		return null;
+		Set<ArcFlow> useless = isolateCycle();
+		int max = e.getCout(), cout;
+		NodeFlow n;
+		ArcFlow f = null, arc;
+		arc = e;
+		do {
+			n = arc.getDestination();
+			for ( ArcFlow a: arcs ) {
+				if ( n.equals( a.getDestination() ) ) {
+					cout = a.getCout();
+					if ( cout > max ) {
+						max = cout;
+						arc = f = a;
+					}
+				} else if ( ! arc.equals( a ) && n.equals( a.getOrigine() ) ) {
+					arc = a;
+				}
+			}
+		} while ( ! n.equals( e.getDestination() ) );
+
+		add( useless );
+
+		return f;
 	}
 
 	public void start() throws IllegalStateException {

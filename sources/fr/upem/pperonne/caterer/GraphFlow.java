@@ -58,25 +58,31 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 	}
 
 	private ArcFlow findArcF( ArcFlow e ) {
-		Set<ArcFlow> useless = isolateCycle();
-		int max = e.getCout(), cout;
-		NodeFlow n;
 		ArcFlow f = null, arc;
 		arc = e;
+		Set<ArcFlow> useless = isolateCycle();
+		int max = e.getCout(), cout;
+		NodeFlow last = e.getDestination();
+
 		do {
-			n = arc.getDestination();
 			for ( ArcFlow a: arcs ) {
-				if ( n.equals( a.getDestination() ) ) {
+				/* Sens opposé à e */
+				if ( last.equals( a.getDestination() ) ) {
+					last = a.getOrigine();
 					cout = a.getCout();
 					if ( cout > max ) {
 						max = cout;
 						arc = f = a;
 					}
-				} else if ( ! arc.equals( a ) && n.equals( a.getOrigine() ) ) {
-					arc = a;
+				} else {
+					/* Sens identique à e */
+					if ( ! arc.equals( a ) && last.equals( a.getOrigine() ) ) {
+						arc = a;
+						last = a.getDestination();
+					}
 				}
 			}
-		} while ( ! n.equals( e.getDestination() ) );
+		} while ( ! last.equals( e.getDestination() ) );
 
 		add( useless );
 

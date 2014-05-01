@@ -230,36 +230,61 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 		} );
 		menu.add( menuGraph );
 
-		final JMenu michelin = new JMenu( "Algorithmes" );
-		JMenuItem startMichelin = new JMenuItem( "Michelin" );
-		startMichelin.addActionListener( new ActionListener() {
+		final JMenu algos = new JMenu( "Algorithmes" );
+		final JMenuItem startAlgos = new JMenuItem( "Démarrer" );
+		startAlgos.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				Runnable thread = new Runnable() {
-					@Override
-					public void run() {
-						Graph current = getCurrentGraph();
-						GraphFlow graph = new GraphFlow( current );
-						add( graph, "Résultat Michelin" );
-						swap( graph );
-						graph.start();
-						setTitle( "Terminé" );
-					}
-				};
-				thread.run();
+				Graph current = getCurrentGraph();
+				Thread thread = new Thread( (Runnable) current );
+				try {
+					thread.start();
+				} catch ( IllegalStateException ex ) {
+					alert( "Impossible de démarrer l'algorithme", ex );
+				}
+				System.out.println("ok");
 			}
 		});
-		michelin.add( startMichelin );
-		menu.add( michelin );
+		algos.add( startAlgos );
+
+		final JMenu convert = new JMenu( "Préparer" );
+
+		JMenuItem simplexe = new JMenuItem( "Simplexe Réseau" );
+		simplexe.addActionListener( new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				Runnable run = new Runnable() {
+					@Override
+					public void run() {
+						final Graph current = getCurrentGraph();
+						GraphFlow graph = new GraphFlow( current );
+						add( graph, getTitle() + " - Simplexe Réseau" );
+						swap( graph );
+					}
+				};
+				Thread thread = new Thread( run );
+				thread.start();
+			}
+		});
+		convert.add( simplexe );
+
+		algos.add( convert );
+
+		menu.add( algos );
 		addChangePageListener( new ChangePageListener() {
 			@Override
 			public void apply( Graph graph ) {
-				if ( graph != null ) {
-					if ( ! michelin.isEnabled() ) {
-						michelin.setEnabled( true );
+				if ( graph == null ) {
+					algos.setEnabled( false );
+				} else {
+					algos.setEnabled( true );
+					if ( graph instanceof Runnable ) {
+						startAlgos.setEnabled( true );
+						convert.setEnabled( false );
+					} else {
+						startAlgos.setEnabled( false );
+						convert.setEnabled( true );
 					}
-				} else if ( michelin.isEnabled() ) {
-					michelin.setEnabled( false );
 				}
 			}
 		} );

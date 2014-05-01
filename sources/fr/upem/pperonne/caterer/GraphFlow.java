@@ -8,8 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
+public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	private final GraphFlow origine;
+	private boolean isRunning = false;
 
 	public GraphFlow( Graph<NodeInt,Arc<NodeInt>> origine ) {
 		HashMap<NodeInt, NodeFlow> link = new HashMap<>();
@@ -32,7 +33,10 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 		this.origine = this.clone();
 	}
 
+	private GraphFlow() { origine = null; }
+
 	private ArcFlow findArcE() {
+		//TODO: A tester: parait renvoyer toujours null (la première solution est déjà la meilleur ? :p).
 		for ( ArcFlow e: origine.arcs ) {
 			add( new NodeFlow() );
 			if ( e.getCout() + e.getOrigine().getDegree() < e.getDestination().getDegree() &&
@@ -88,19 +92,124 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 
 		return f;
 	}
+	
+	private void updatePrice() {
+		NodeFlow node = (NodeFlow) nodes.toArray()[0];
+		node.setPrice( 0 );
+		runPrefix( node, new FunctionNode<NodeFlow>() {
+			@Override
+			public void accept( NodeFlow S ) {
+				for ( ArcFlow arc: outArcs( S ) ) {
+					arc.destination.setPrice( S.getPrice() + arc.getCout() );
+				}
+			}
 
-	public void start() throws IllegalStateException {
-		if ( 0 != degreeTotal() ) {
-			throw new IllegalStateException( "Imposible de démarrer l'algorithme du simplexe réseau, car l'ofre n'est pas égale à la demande." );
+			@Override
+			public NodeFlow next( NodeFlow node, Set<NodeFlow> visited ) {
+				Set<NodeFlow> neighbours;
+				for ( NodeFlow n: visited ) {
+					neighbours = neighboursLocal( n );
+					neighbours.removeAll( visited );
+					for ( NodeFlow nf: neighbours ) {
+						return nf;
+					}
+				}
+				return null;
+			}
+		} );
+	}
+	
+	private void updateFlow( ArcFlow e ) {
+		runPrefix( e, new FunctionArc<ArcFlow>() {
+			@Override
+			public void accept( ArcFlow A ) {
+				NodeFlow dest = A.getDestination();
+				int flow = A.getFlow() - dest.getDegree(), transported, needed;
+				for ( ArcFlow a: outArcsLocal( dest ) ) {
+					needed = origine.get( a.destination ).getDegree();
+					transported = Math.min( needed, flow );
+					flow -= transported;
+					a.setFlow( transported );
+				}
+			}
+
+			@Override
+			public ArcFlow next( ArcFlow arc, Set<ArcFlow> visited ) {
+				Set<ArcFlow> nexts;
+				for ( ArcFlow A: visited ) {
+					nexts = outArcsLocal( A.getDestination() );
+					nexts.removeAll( visited );
+					for ( ArcFlow a: nexts ) {
+						return a;
+					}
+				}
+				return null;
+			}
+		} );
+	}
+
+	private void firstSolution() {
+		//TODO: A tester (fait à l'arrache)
+		runPrefix( new FunctionNode<NodeFlow>() {
+			@Override
+			public void accept(NodeFlow S) {
+				NodeFlow dest;
+				int degree;
+				for ( ArcFlow arc: outArcsLocal( S ) ) {
+					dest = arc.destination;
+					if ( dest.isNeeding() ) {
+						degree = dest.getDegree();
+						S.addDegree( degree );
+						arc.setFlow( degree );
+						dest.setDegree( 0 );
+					}
+				}
+			}
+
+			@Override
+			public NodeFlow next( NodeFlow S, Set<NodeFlow> visited ) {
+				Set<NodeFlow> nexts = children( S );
+				nexts.removeAll( visited );
+				for ( NodeFlow node: nexts ) {
+					return next( node, visited );
+				}
+				if ( S.isNeeding() ) {
+					for ( NodeFlow node: parents( S ) ) {
+						return node;
+					}
+				}
+				nexts = getNodes();
+				nexts.removeAll( visited );
+				for ( NodeFlow node: nexts ) {
+					return node;
+				}
+				return null;
+			}
+		} );
+	}
+
+	@Override
+	public synchronized void run() throws IllegalStateException {
+		if ( isRunning ) {
+			throw new IllegalStateException( "L'algorithme a déjà démarré." );
 		}
-		//TODO: firstSolution();
+		if ( 0 != degreeTotal() ) {
+			throw new IllegalStateException( "L'offre n'est pas égale à la demande." );
+		}
+		isRunning = true;
+		firstSolution();
+		updatePrice();
 		ArcFlow e, f;
+		int i=0;
 		while ( null != ( e = findArcE() ) ) {
+			System.out.println("itération "+ i++);
 			f = findArcF( e );
 			add( e );
 			remove( f );
-			//TODO: updatePrice();
+			updatePrice();
+			updateFlow( e );
 		}
+		isRunning = false;
 	}
 
 	public List<NodeInt> needs() {
@@ -198,7 +307,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> {
 		Graph<NodeInt, Arc<NodeInt>> origine = new Graph<>();
 		origine.add( origine.arcs );
 		origine.add( origine.nodes );
-		GraphFlow g = new GraphFlow( origine );
+		GraphFlow g = new GraphFlow();
 		return g;
 	}
 }

@@ -2,8 +2,15 @@ package fr.upem.pperonne.caterer;
 
 
 public class NodeFlow extends NodeInt {
+	private int price = 0;
+
 	public NodeFlow( int poids ) {
 		super( poids );
+	}
+
+	public NodeFlow( int poids, int price ) {
+		this( poids );
+		this.price = price;
 	}
 
 	public NodeFlow() {
@@ -19,5 +26,17 @@ public class NodeFlow extends NodeInt {
 		NodeFlow nf = new NodeFlow( getDegree() );
 		clone( nf );
 		return nf;
+	}
+	
+	public void setPrice( int price ) {
+		this.price = price;
+	}
+	
+	public int getPrice() {
+		return price;
+	}
+
+	public boolean isNeeding() {
+		return getDegree() > 0;
 	}
 }

@@ -66,14 +66,20 @@ public class TestGraph extends Graph {
 	@Test
 	public void parcoursPrefix() {
 		final Set<Node> list = new HashSet<>();
-		Graph G = init( 3 );
+		final Graph G = init( 3 );
 		List<Node> nodes = getNodesLocalTest( G );
 		Object[] result = nodes.toArray();
 		G.add( new Arc( nodes.get( 0 ), nodes.get( 1 ) ) );
 		G.add( new Arc( nodes.get( 1 ), nodes.get( 0 ) ) );
-		FunctionNode f = new FunctionNode() {
+		FunctionNode f = new FunctionNode<Node>() {
+			@Override
 			public void accept( Node S ) {
 				list.add( S );
+			}
+
+			@Override
+			public Node next(Node S, Set<Node> visited) {
+				return (Node) G.next( S, visited );
 			}
 		};
 		G.runPrefix( f );
@@ -83,16 +89,22 @@ public class TestGraph extends Graph {
 	@Test
 	public void parcoursSuffix() {
 		final Set<Node> list = new HashSet<>();
-		Graph G = init( 3 );
+		final Graph G = init( 3 );
 		List<Node> nodes = getNodesLocalTest( G ), result = new ArrayList<>();
 		result.add( nodes.get( 1 ) );
 		result.add( nodes.get( 0 ) );
 		result.add( nodes.get( 2 ) );
 		G.add( new Arc( nodes.get( 0 ), nodes.get( 1 ) ) );
 		G.add( new Arc( nodes.get( 1 ), nodes.get( 0 ) ) );
-		FunctionNode f = new FunctionNode() {
+		FunctionNode f = new FunctionNode<Node>() {
+			@Override
 			public void accept( Node S ) {
 				list.add( S );
+			}
+
+			@Override
+			public Node next( Node S, Set<Node> visited ) {
+				return (Node) G.next( S, visited );
 			}
 		};
 		G.runSuffix( f );

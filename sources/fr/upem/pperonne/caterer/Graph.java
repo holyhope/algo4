@@ -128,7 +128,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	}
 	
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	private <E> E next( HashSet<E> visited, E o ) throws IllegalStateException {
+	public <E> E next( E o, Set<E> visited ) throws IllegalStateException {
 		Node dest;
 
 		if ( o instanceof Node ) {
@@ -201,23 +201,30 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return arcs;
 	}
 
-	public void runPrefix( FunctionNode<N> f ) {
-		HashSet<N> visited = new HashSet<>();
-		for ( N S: nodes ) {
-			runPrefix( S, f, visited );
+	@SuppressWarnings("unchecked")
+	public <E> void runPrefix( FunctionRun<E> f ) {
+		HashSet<E> visited = new HashSet<>();
+		if ( f instanceof FunctionNode ) {
+			for ( N node: nodes ) {
+				runPrefix( (E) node, f, visited );
+			}
+		} else if ( f instanceof FunctionArc ) {
+			for ( A arc: arcs ) {
+				runPrefix( (E) arc, f, visited );
+			}
 		}
 	}
 
-	public void runPrefix( N S, FunctionNode<N> f ) {
-		runPrefix( S, f, new HashSet<N>() );
+	public <E> void runPrefix( E S, FunctionRun<E> f ) {
+		runPrefix( S, f, new HashSet<E>() );
 	}
 
-	private void runPrefix(
-			N S,
-			FunctionNode<N> f,
-			HashSet<N> visited
+	private <E> void runPrefix(
+			E S,
+			FunctionRun<E> f,
+			HashSet<E> visited
 		) {
-		N T;
+		E T;
 
 		if ( visited.contains( S ) ) {
 			return;
@@ -226,37 +233,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		f.accept( S );
 		visited.add( S );
 
-		while ( null != ( T = next( visited, S ) ) ) {
-			runPrefix( T, f, visited );
-		}
-	}
-
-	public void runPrefix( FunctionArc<A> f ) {
-		HashSet<A> visited = new HashSet<>();
-		for ( A a: arcs ) {
-			runPrefix( a, f, visited );
-		}
-	}
-
-	public void runPrefix( A a, FunctionArc<A> f ) {
-		runPrefix( a, f, new HashSet<A>() );
-	}
-
-	private void runPrefix(
-			A a,
-			FunctionArc<A> f,
-			HashSet<A> visited
-		) {
-		A T;
-
-		if ( visited.contains( a ) ) {
-			return;
-		}
-
-		f.accept( a );
-		visited.add( a );
-
-		while ( null != ( T = next( visited, a ) ) ) {
+		while ( null != ( T = f.next( S, visited ) ) ) {
 			runPrefix( T, f, visited );
 		}
 	}
@@ -285,7 +262,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 		visited.add( S );
 
-		while ( null != ( T = next( visited, S ) ) ) {
+		while ( null != ( T = f.next( S, visited ) ) ) {
 			runSuffix( T, f, visited );
 		}
 
@@ -359,12 +336,19 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	
 	public boolean pathExists( N origine, final N dest ) {
 		final HashSet<Boolean> access = new HashSet<>();
+		final Graph<N, A> graph = this;
 
 		FunctionNode<N> f = new FunctionNode<N>() {
+			@Override
 			public void accept( N S ) {
 				if ( S.equals( dest ) ) {
 					access.add( true );
 				}
+			}
+
+			@Override
+			public N next( N S, Set<N> visited ) {
+				return graph.next( S, visited );
 			}
 		};
 		runPrefix( origine, f );

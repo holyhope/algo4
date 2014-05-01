@@ -23,7 +23,7 @@ public class ContentSwing extends Container implements MouseMotionListener {
 	private static Dimension dimensionSommet = new Dimension( 30, 20 );
 	private String title;
 
-	public ContentSwing( Graph<?,?> graph, String title ) {
+	public ContentSwing( final Graph<?,?> graph, String title ) {
 		this.graph = graph;
 		this.title = title;
 	}

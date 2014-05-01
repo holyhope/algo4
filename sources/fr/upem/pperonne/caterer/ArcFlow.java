@@ -1,18 +1,7 @@
 package fr.upem.pperonne.caterer;
 
 public class ArcFlow extends Arc<NodeFlow> {
-	private Integer capacity = Integer.MAX_VALUE, min = Integer.MIN_VALUE;
-
-	public ArcFlow(
-			NodeFlow origine,
-			NodeFlow destination,
-			int cout,
-			int min,
-			int capacity
-		) throws IllegalArgumentException {
-		this( origine, destination, cout, capacity );
-		this.min = min;
-	}
+	private Integer max = Integer.MAX_VALUE, flow;
 
 	public ArcFlow(
 			NodeFlow origine,
@@ -21,7 +10,7 @@ public class ArcFlow extends Arc<NodeFlow> {
 			int capacity
 		) throws IllegalArgumentException {
 		this( origine, destination, cout );
-		this.capacity = capacity;
+		this.max = capacity;
 	}
 
 	public ArcFlow(
@@ -31,28 +20,41 @@ public class ArcFlow extends Arc<NodeFlow> {
 		) throws IllegalArgumentException {
 		super( origine, destination, cout );
 	}
-	
+
 	public ArcFlow( Arc<NodeFlow> arc ) {
 		super( arc );
 	}
 
 	public int getCapacity() {
-		return capacity;
+		return max;
 	}
 
 	@Override
 	public void setCout( int cout ) throws IllegalArgumentException {
-		if ( cout > capacity ) {
-			throw new IllegalArgumentException( "La valeur dépasse la capacité." );
-		}
-		if ( cout < min ) {
-			throw new IllegalArgumentException( "La valeur est inférieur à la quantité minimale." );
+		if ( cout > max ) {
+			throw new IllegalArgumentException( "La valeur d�passe la capacit�." );
 		}
 		super.setCout( cout );
 	}
 	
 	@Override
 	protected ArcFlow clone() {
-		return new ArcFlow( getOrigine(), getDestination(), getCout(), min, capacity );
+		return new ArcFlow( getOrigine(), getDestination(), getCout(), max );
+	}
+	
+	public void setMax( Integer max ) {
+		if ( max < 0 ) {
+			this.max = Integer.MAX_VALUE;
+		} else {
+			this.max = max;
+		}
+	}
+
+	public Integer getFlow() {
+		return flow;
+	}
+
+	public void setFlow(Integer flow) {
+		this.flow = flow;
 	}
 }

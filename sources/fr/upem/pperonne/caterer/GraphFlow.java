@@ -10,7 +10,6 @@ import java.util.Set;
 
 public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	private final GraphFlow origine;
-	private boolean isRunning = false;
 
 	public GraphFlow( Graph<NodeInt,Arc<NodeInt>> origine ) {
 		HashMap<NodeInt, NodeFlow> link = new HashMap<>();
@@ -36,7 +35,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	private GraphFlow() { origine = null; }
 
 	private ArcFlow findArcE() {
-		//TODO: A tester: parait renvoyer toujours null (la première solution est déjà la meilleur ? :p).
+		//TODO: A tester: Parait renvoyer toujours null (la première solution est déjà la meilleur ?).
 		for ( ArcFlow e: origine.arcs ) {
 			add( new NodeFlow() );
 			if ( e.getCout() + e.getOrigine().getDegree() < e.getDestination().getDegree() &&
@@ -149,7 +148,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	}
 
 	private void firstSolution() {
-		//TODO: A tester (fait à l'arrache)
+		//TODO: A tester
 		runPrefix( new FunctionNode<NodeFlow>() {
 			@Override
 			public void accept(NodeFlow S) {
@@ -168,6 +167,11 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 
 			@Override
 			public NodeFlow next( NodeFlow S, Set<NodeFlow> visited ) {
+				if ( S == null ) {
+					for ( NodeFlow node: nodes ) {
+						return node;
+					}
+				}
 				Set<NodeFlow> nexts = children( S );
 				nexts.removeAll( visited );
 				for ( NodeFlow node: nexts ) {
@@ -186,30 +190,42 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 				return null;
 			}
 		} );
+		runPrefix( new FunctionArc<ArcFlow>() {
+			@Override
+			public void accept( ArcFlow S ) {
+				if ( S.getFlow() == 0 ) {
+					remove( S );
+				}
+			}
+	
+			@Override
+			public ArcFlow next( ArcFlow S, Set<ArcFlow> visited ) {
+				Set<ArcFlow> nexts = arcs;
+				arcs.removeAll( visited );
+				for ( ArcFlow arc: nexts ) {
+					return arc;
+				}
+				return null;
+			}
+		} );
 	}
 
 	@Override
 	public synchronized void run() throws IllegalStateException {
-		if ( isRunning ) {
-			throw new IllegalStateException( "L'algorithme a déjà démarré." );
-		}
 		if ( 0 != degreeTotal() ) {
 			throw new IllegalStateException( "L'offre n'est pas égale à la demande." );
 		}
-		isRunning = true;
 		firstSolution();
 		updatePrice();
 		ArcFlow e, f;
-		int i=0;
+		int i = 0;
 		while ( null != ( e = findArcE() ) ) {
-			System.out.println("itération "+ i++);
 			f = findArcF( e );
 			add( e );
 			remove( f );
 			updatePrice();
 			updateFlow( e );
 		}
-		isRunning = false;
 	}
 
 	public List<NodeInt> needs() {

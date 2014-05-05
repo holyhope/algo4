@@ -201,18 +201,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return arcs;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <E> void runPrefix( FunctionRun<E> f ) {
-		HashSet<E> visited = new HashSet<>();
-		if ( f instanceof FunctionNode ) {
-			for ( N node: nodes ) {
-				runPrefix( (E) node, f, visited );
-			}
-		} else if ( f instanceof FunctionArc ) {
-			for ( A arc: arcs ) {
-				runPrefix( (E) arc, f, visited );
-			}
-		}
+		runPrefix( null, f, new HashSet<E>() );
 	}
 
 	public <E> void runPrefix( E S, FunctionRun<E> f ) {
@@ -224,17 +214,18 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 			FunctionRun<E> f,
 			HashSet<E> visited
 		) {
-		E T;
+		E T = S;
 
 		if ( visited.contains( S ) ) {
 			return;
 		}
-
-		f.accept( S );
-		visited.add( S );
+		if ( S != null ) {
+			f.accept( S );
+		}
 
 		while ( null != ( T = f.next( S, visited ) ) ) {
-			runPrefix( T, f, visited );
+			f.accept( T );
+			visited.add( T );
 		}
 	}
 

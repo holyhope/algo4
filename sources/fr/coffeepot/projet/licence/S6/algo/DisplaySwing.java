@@ -242,7 +242,6 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 				} catch ( IllegalStateException ex ) {
 					alert( "Impossible de démarrer l'algorithme", ex );
 				}
-				System.out.println("ok");
 			}
 		});
 		algos.add( startAlgos );

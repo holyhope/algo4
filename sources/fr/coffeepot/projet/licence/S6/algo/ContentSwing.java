@@ -55,6 +55,7 @@ public class ContentSwing extends Container implements MouseMotionListener {
 			ds.addMouseMotionListener( this );
 			add( ds );
 			ds.setSize( dimensionSommet );
+			mouseDragged( new MouseEvent( ds, MouseEvent.MOUSE_DRAGGED, 0, MouseEvent.NOBUTTON, 0, 0, 0, false, MouseEvent.BUTTON1 ) );
 			return ds;
 		}
 		return getDisplayNode( S );
@@ -180,7 +181,7 @@ public class ContentSwing extends Container implements MouseMotionListener {
 			Dimension dim = ds.getSize();
 			Point position = ds.getLocation();
 			Dimension limit = getSize();
-			limit.width -= dim.width;
+			limit.width  -= dim.width;
 			limit.height -= dim.height;
 			position.x += e.getX() - dim.width  / 2;
 			position.y += e.getY() - dim.height / 2;

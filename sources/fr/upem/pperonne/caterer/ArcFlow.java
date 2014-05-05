@@ -1,7 +1,7 @@
 package fr.upem.pperonne.caterer;
 
 public class ArcFlow extends Arc<NodeFlow> {
-	private Integer max = Integer.MAX_VALUE, flow;
+	private Integer max = Integer.MAX_VALUE, flow = 0;
 
 	public ArcFlow(
 			NodeFlow origine,

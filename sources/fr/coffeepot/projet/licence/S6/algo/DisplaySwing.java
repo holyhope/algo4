@@ -24,7 +24,6 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.Timer;
@@ -240,10 +239,10 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 				try {
 					thread.start();
 				} catch ( IllegalStateException ex ) {
-					alert( "Impossible de démarrer l'algorithme", ex );
+					Dialog.error( "Impossible de démarrer l'algorithme", ex );
 				}
 			}
-		});
+		} );
 		algos.add( startAlgos );
 
 		final JMenu convert = new JMenu( "Préparer" );
@@ -306,24 +305,11 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 	public void removeChangePageListener( ChangePageListener listener ) {
 		changeListeners.remove( listener );
 	}
-	
-	private void alert( String text ) {
-		JOptionPane.showMessageDialog( this, text + "." );
-	}
-	
-	private void alert( String text, Exception e ) {
-		String msg = e.getMessage();
-		if ( msg == null ) {
-			JOptionPane.showMessageDialog( this, text + "." );
-		} else {
-			JOptionPane.showMessageDialog( this, text + " :\n" + e.getMessage() );
-		}
-	}
 
 	private void saveCurrentGraph() {
 		Graph graph = getCurrentGraph();
 		if ( graph == null ) {
-			alert( "Aucun graphe n'est ouvert." );
+			Dialog.error( "Aucun graphe n'est ouvert" );
 			return;
 		}
 		FileDialog fd = new FileDialog( this, "Test", FileDialog.SAVE );
@@ -337,7 +323,7 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 				print.write( graph.toString() );
 	    		print.close();
 			} catch ( FileNotFoundException e ) {
-				alert( "Fichier introuvable", e );
+				Dialog.error( "Fichier introuvable", e );
 			}
         }
 	}
@@ -371,12 +357,12 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 					add( G, file.getName() );
 					swap( G );
 				} catch ( IllegalArgumentException ex ) {
-					alert( "Impossible de charger le graphe", ex );
+					Dialog.error( "Impossible de charger le graphe", ex );
 				} finally {
 					stream.close();
 				}
 			} catch ( FileNotFoundException ex ) {
-				alert( "Impossible d'ouvrir le fichier" + " :\n" + "Fichier introuvable" );
+				Dialog.error( "Impossible d'ouvrir le fichier", ex );
 			}
 		}
 	}
@@ -397,7 +383,7 @@ public class DisplaySwing extends JFrame implements ActionListener, Display {
 
 	public void remove( Graph graph ) throws IllegalArgumentException {
 		if ( ! graphs.containsKey( graph ) ) {
-			throw new IllegalArgumentException( "Le graphe n'est pas ouvert." );
+			Dialog.error( "Le graphe n'est pas ouvert." );
 		}
 		graphs.remove( graph );
 		triggerRemoveGraphListener( graph );

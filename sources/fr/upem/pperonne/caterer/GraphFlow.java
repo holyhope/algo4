@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -36,16 +37,23 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 
 	private ArcFlow findArcE() {
 		//TODO: A tester: Parait renvoyer toujours null (la première solution est déjà la meilleur ?).
-		for ( ArcFlow e: origine.arcs ) {
-			add( new NodeFlow() );
-			if ( e.getCout() + e.getOrigine().getDegree() < e.getDestination().getDegree() &&
-					isCyclicNoSens() ) {
-				return e;
+		Iterator<ArcFlow> it = origine.arcs.iterator();
+		ArcFlow e;
+		while ( it.hasNext() ) {
+			e = it.next();
+			if ( ! arcs.contains( e ) ) {
+				add( e );
+				if ( e.getCout() + e.getOrigine().getDegree() < e.getDestination().getDegree() &&
+						isCyclicNoSens() ) {
+					remove( e );
+					return e;
+				}
+				remove( e );
 			}
 		}
 		return null;
 	}
-	
+
 	private Set<ArcFlow> isolateCycle() {
 		Set<ArcFlow> useless = new HashSet<>();
 		for ( ArcFlow arc: arcs ) {
@@ -91,7 +99,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 
 		return f;
 	}
-	
+
 	private void updatePrice() {
 		NodeFlow node = (NodeFlow) nodes.toArray()[0];
 		node.setPrice( 0 );
@@ -117,7 +125,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 			}
 		} );
 	}
-	
+
 	private void updateFlow( ArcFlow e ) {
 		runPrefix( e, new FunctionArc<ArcFlow>() {
 			@Override
@@ -147,67 +155,72 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		} );
 	}
 
-	private void firstSolution() {
-		//TODO: A tester
-		runPrefix( new FunctionNode<NodeFlow>() {
-			@Override
-			public void accept(NodeFlow S) {
-				NodeFlow dest;
-				int degree;
-				for ( ArcFlow arc: outArcsLocal( S ) ) {
-					dest = arc.destination;
-					if ( dest.isNeeding() ) {
-						degree = dest.getDegree();
-						S.addDegree( degree );
-						arc.setFlow( degree );
-						dest.setDegree( 0 );
-					}
+	public void firstSolution() {
+		// weight --> modifierPoidsArcs
+		int result = 0;
+		NodeFlow bestNode = null;
+		int nbNeighbours;
+		// ---------- Meilleur Noeud ------------
+		for ( NodeFlow node: nodes ) {
+			nbNeighbours = neighbours( node ).size();
+			if ( nbNeighbours > result ) {
+				bestNode = node;
+				result = nbNeighbours;
+			}
+		}
+		// ----------- Arcs réels ---------------
+		Iterator<ArcFlow> it = arcs.iterator();
+		ArcFlow arc;
+		NodeFlow linkedNode;
+		while ( it.hasNext() ) {
+			arc = it.next();
+			linkedNode = null;
+			if ( bestNode.equals( arc.getOrigine() ) ){
+				linkedNode = arc.getDestination();
+			} else if ( bestNode.equals( arc.getDestination() ) ) {
+				linkedNode = arc.getOrigine();
+			}
+			if ( linkedNode == null ) {
+				it.remove();
+			} else {
+				arc.setCout( Math.abs( linkedNode.getDegree() ) );
+			}
+		}
+		// ---------- Arcs Artificiels ---------
+		boolean linked;
+		int degree, weight;
+		for ( NodeFlow node: nodes ) {
+			linked = false;
+			for ( NodeFlow neighbour: neighbours( node ) ) {
+				if ( neighbour.equals( bestNode ) ) {
+					linked = true;
 				}
 			}
-
-			@Override
-			public NodeFlow next( NodeFlow S, Set<NodeFlow> visited ) {
-				if ( S == null ) {
-					for ( NodeFlow node: nodes ) {
-						return node;
-					}
-				}
-				Set<NodeFlow> nexts = children( S );
-				nexts.removeAll( visited );
-				for ( NodeFlow node: nexts ) {
-					return next( node, visited );
-				}
-				if ( S.isNeeding() ) {
-					for ( NodeFlow node: parents( S ) ) {
-						return node;
-					}
-				}
-				nexts = getNodes();
-				nexts.removeAll( visited );
-				for ( NodeFlow node: nexts ) {
-					return node;
-				}
-				return null;
-			}
-		} );
-		runPrefix( new FunctionArc<ArcFlow>() {
-			@Override
-			public void accept( ArcFlow S ) {
-				if ( S.getFlow() == 0 ) {
-					remove( S );
+			if ( ! linked ) {
+				degree = node.getDegree();
+				weight = Math.abs( degree );
+				if ( degree > 0 ) {
+					add( new ArcFlow( bestNode, node, weight ) );
+				} else {
+					add( new ArcFlow( node, bestNode, weight ) );
 				}
 			}
+		}
+		updatePrice();
+	}
 	
-			@Override
-			public ArcFlow next( ArcFlow S, Set<ArcFlow> visited ) {
-				Set<ArcFlow> nexts = arcs;
-				arcs.removeAll( visited );
-				for ( ArcFlow arc: nexts ) {
-					return arc;
-				}
-				return null;
-			}
-		} );
+	public boolean nextIteration() {
+		ArcFlow e = findArcE(), f;
+		if ( e == null ) {
+			return false;
+		}
+		System.out.println( e );
+		f = findArcF( e );
+		add( e );
+		remove( f );
+		updatePrice();
+		updateFlow( e );
+		return true;
 	}
 
 	@Override
@@ -216,16 +229,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 			throw new IllegalStateException( "L'offre n'est pas égale à la demande." );
 		}
 		firstSolution();
-		updatePrice();
-		ArcFlow e, f;
-		int i = 0;
-		while ( null != ( e = findArcE() ) ) {
-			f = findArcF( e );
-			add( e );
-			remove( f );
-			updatePrice();
-			updateFlow( e );
-		}
+		while ( nextIteration() );
 	}
 
 	public List<NodeInt> needs() {

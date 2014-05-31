@@ -58,6 +58,7 @@ public class TestGraph extends Graph {
 		G.add( a1 );
 		assertTrue( G.getArcs().size() == 1 );
 		assertTrue( G.getArcs().contains( a1 ) );
+
 		G.add( a2 );
 		assertTrue( G.getArcs().size() == 2 );
 		assertTrue( G.getArcs().contains( a2 ) && G.getArcs().contains( a1 ) );

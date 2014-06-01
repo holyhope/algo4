@@ -153,19 +153,20 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		}
 		System.out.println( "mise à jour des prix." );
 		for ( NodeFlow node: nodes ) {
-			System.out.println( "Début du parcours par le noeud " + node);
 			node.setPrice( 0 );
 			runPrefix( node, new FunctionNode<NodeFlow>() {
 				private ArcFlow arc;
 	
 				@Override
 				public void accept( NodeFlow S ) {
-					System.out.println( S );
 					if ( arc != null ) {
+						int price;
 						if ( S.equals( arc.destination ) ) {
-							S.setPrice( arc.origine.getPrice() + arc.getCout() );
+							price = arc.origine.getPrice() + arc.getCout();
+							S.setPrice( price );
 						} else {
-							S.setPrice( arc.destination.getPrice() - arc.getCout() );
+							price = arc.destination.getPrice() - arc.getCout();
+							S.setPrice( price );
 						}
 					}
 				}
@@ -177,12 +178,14 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 						arcs = outArcsLocal( node );
 						for ( ArcFlow arc: arcs ) {
 							if ( ! visited.contains( arc.destination ) ) {
+								this.arc = arc;
 								return arc.destination;
 							}
 						}
 						arcs = inArcsLocal( node );
 						for ( ArcFlow arc: arcs ) {
 							if ( ! visited.contains( arc.origine ) ) {
+								this.arc = arc;
 								return arc.origine;
 							}
 						}
@@ -190,13 +193,6 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 					return null;
 				}
 			} );
-		}
-		for ( ArcFlow arc: arcs ) {
-			System.out.println( arc.getDestination() + "\t" + arc.getDestination().getPrice() );
-			System.out.println( arc.getOrigine() + "\t" + arc.getOrigine().getPrice() );
-		}
-		for ( NodeFlow node: nodes ) {
-			System.out.println( node + "\t" + node.getPrice() );
 		}
 	}
 

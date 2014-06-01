@@ -2,6 +2,7 @@ package fr.upem.pperonne.caterer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -68,6 +69,8 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 				if ( ! add( (N) o ) ) {
 					flag = false;
 				}
+			} else {
+				flag = false;
 			}
 		}
 		return flag;
@@ -90,21 +93,27 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	@SuppressWarnings("unchecked")
 	public boolean remove( Collection<?> list ) throws IllegalArgumentException {
 		boolean flag = true;
-		if ( list == null ) {
-			throw new IllegalArgumentException( "La liste de sommets à ajouter ne peut pas être null." );
-		}
+		Objects.requireNonNull( list );
 		for ( Object o: list ) {
 			if ( o instanceof Arc ) {
-				if ( ! add( (A) o ) ) {
+				if ( ! remove( (A) o ) ) {
 					flag = false;
 				}
 			} else if ( o instanceof Node ) {
-				if ( ! add( (N) o ) ) {
+				if ( ! remove( (N) o ) ) {
 					flag = false;
 				}
 			}
 		}
 		return flag;
+	}
+
+	public boolean contains( A a ) {
+		return arcs.contains( a );
+	}
+
+	public boolean contains( N n ) {
+		return nodes.contains( n );
 	}
 
 	@Override
@@ -126,7 +135,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 		return string.toString();
 	}
-	
+
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public <E> E next( E o, Set<E> visited ) throws IllegalStateException {
 		Node dest;
@@ -150,7 +159,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 		return null;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public Set<A> inArcs( N node ) {
 		HashSet<A> arcs = new HashSet<>();
@@ -163,8 +172,22 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 		return arcs;
 	}
-	
-	private HashSet<A> inArcsLocal( N node ) {
+
+	protected HashSet<A> inOutArcsLocal( N node ) {
+		HashSet<A> arcs = inArcsLocal( node );
+		arcs.addAll( outArcsLocal( node ) );
+
+		return arcs;
+	}
+
+	public Set<A> inOutArcs( N node ) {
+		Set<A> arcs = inArcs( node );
+		arcs.addAll( outArcs( node ) );
+
+		return arcs;
+	}
+
+	protected HashSet<A> inArcsLocal( N node ) {
 		HashSet<A> arcs = new HashSet<>();
 
 		for ( A arc: this.arcs ) {
@@ -213,7 +236,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 			E S,
 			FunctionRun<E> f,
 			HashSet<E> visited
-		) {
+			) {
 		E T = S;
 
 		if ( visited.contains( S ) ) {
@@ -221,6 +244,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		if ( S != null ) {
 			f.accept( S );
+			visited.add( S );
 		}
 
 		while ( null != ( T = f.next( S, visited ) ) ) {
@@ -244,7 +268,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 			N S,
 			FunctionNode<N> f,
 			HashSet<N> visited
-		) {
+			) {
 		N T;
 
 		if ( visited.contains( S ) ) {
@@ -282,7 +306,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 			N origine,
 			N dest,
 			HashSet<N> visited
-		) {
+			) {
 		visited.add( origine );
 
 		for ( A arc: outArcsLocal( origine ) ) {
@@ -291,18 +315,18 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 			}
 			if ( ! visited.contains( arc.destination ) &&
 					isAccessible( arc.destination, dest, visited )
-				) {
-					return true;
+					) {
+				return true;
 			}
 		}
 
 		return false;
 	}
-	
+
 	public int degree( N S ) {
 		return outArcs( S ).size();
 	}
-	
+
 	public int degreeMax() {
 		int max = 0, deg;
 		for ( N S: nodes ) {
@@ -313,7 +337,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		return max;
 	}
-	
+
 	public int degreeMin() {
 		int min = nodes.size(), deg;
 		for ( N S: nodes ) {
@@ -324,7 +348,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		return min;
 	}
-	
+
 	public boolean pathExists( N origine, final N dest ) {
 		final HashSet<Boolean> access = new HashSet<>();
 		final Graph<N, A> graph = this;
@@ -343,7 +367,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 			}
 		};
 		runPrefix( origine, f );
-		
+
 		return access.size() > 0;
 	}
 
@@ -357,7 +381,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		return true;
 	}
-	
+
 	public Set<N> parents( N node ) {
 		Set<N> parents = new HashSet<>();
 		for ( A a: arcs ) {
@@ -375,7 +399,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		return parents;
 	}
-	
+
 	public Set<N> children( N node ) {
 		Set<N> children = new HashSet<>();
 		for ( A a: arcs ) {
@@ -403,15 +427,6 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return false;
 	}
 
-	public boolean isCyclicNoSens() {
-		for ( N S: nodes ) {
-			if ( isCyclicNoSens( null, S, new HashSet<N>() ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	private boolean isCyclic( N s, HashSet<N> visitedNodes ) {
 		if ( neighbours( s ).size() == 0 ){
 			return false;
@@ -430,16 +445,26 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return false;
 	}
 
+	public boolean isCyclicNoSens() {
+		for ( N S: nodes ) {
+			if ( isCyclicNoSens( null, S, new HashSet<N>() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean isCyclicNoSens( A previous, N s, HashSet<N> visitedNodes ) {
-		if ( neighbours( s ).size() == 0 ){
+		if ( neighbours( s ).size() == 0 ) {
 			return false;
 		}
 		HashSet<N> visisted = new HashSet<>();
-		HashSet<A> neighbours = outArcsLocal( s );
-		N n;
 		visisted.addAll( visitedNodes );
 		visisted.add( s );
+		HashSet<A> neighbours = outArcsLocal( s );
+		neighbours.addAll( inArcsLocal( s ) );
 		neighbours.remove( previous );
+		N n;
 		for ( A a: neighbours ) {
 			n = a.destination;
 			if ( visisted.contains( n ) ||
@@ -499,15 +524,15 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return list;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Set<N> getNodes() {
-		Set<N> list = new HashSet<>();
-		for ( N s: nodes ) {
-			list.add( (N) s.clone() );
+	@SuppressWarnings("rawtypes")
+	public Set<Node> getNodes() {
+		Set<Node> list = new HashSet<>();
+		for ( Node s: nodes ) {
+			list.add( s.clone() );
 		}
 		return list;
 	}
-	
+
 	protected N get( N node ) throws NullPointerException {
 		Objects.requireNonNull( node );
 		for ( N S: nodes ) {
@@ -553,12 +578,22 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 		return arcs.size() == 0;
 	}
-	
+
+	@SuppressWarnings({ "unchecked" })
 	@Override
 	protected Graph<N,A> clone() {
 		Graph<N,A> g = new Graph<>();
-		g.add( getArcs() );
-		g.add( getNodes() );
+		HashMap<N,N> nodeMap = new HashMap<>();
+		for ( N node: nodes ) {
+			nodeMap.put( node, (N) node.clone() );
+		}
+		g.add( nodeMap.values() );
+		for ( A arc: arcs ) {
+			arc             = (A) arc.clone();
+			arc.origine     = nodeMap.get( arc.origine );
+			arc.destination = nodeMap.get( arc.destination );
+			g.add( arc );
+		}
 		return g;
 	}
 }

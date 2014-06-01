@@ -6,52 +6,99 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
-	private final GraphFlow origine;
+	private final Graph<NodeInt, Arc<NodeInt>> origine;
+	private HashMap<Node<?>, NodeFlow> nodeMap = new HashMap<>();
+	private HashMap<Arc<?>, ArcFlow> arcMap = new HashMap<>();
 
 	public GraphFlow( Graph<NodeInt,Arc<NodeInt>> origine ) {
-		HashMap<NodeInt, NodeFlow> link = new HashMap<>();
+		super();
 
+		this.origine = origine.clone();
 		NodeFlow nf;
-		for ( NodeInt n: origine.nodes ) {
+		for ( NodeInt n: this.origine.nodes ) {
 			nf = new NodeFlow( n );
 			add( nf );
-			link.put( n, nf );
+			nodeMap.put( n, nf );
 		}
 
-		for ( Arc<NodeInt> arc: origine.arcs ) {
-			add( new ArcFlow(
-				link.get( arc.origine ),
-				link.get( arc.destination ),
-				arc.getCout()
-			) );
+		ArcFlow af;
+		for ( Arc<NodeInt> a: this.origine.arcs ) {
+			af = new ArcFlow(
+				nodeMap.get( a.origine ),
+				nodeMap.get( a.destination ),
+				a.getCout(),
+				0
+			);
+			add( af );
+			arcMap.put( a, af );
 		}
-
-		this.origine = this.clone();
 	}
 
 	private GraphFlow() { origine = null; }
 
 	private ArcFlow findArcE() {
-		//TODO: A tester: Parait renvoyer toujours null (la première solution est déjà la meilleur ?).
-		Iterator<ArcFlow> it = origine.arcs.iterator();
+		System.out.println( "On trouve l'arc entrant." );
 		ArcFlow e;
+		Arc<NodeInt> tmp;
+		Iterator<Arc<NodeInt>> it = origine.arcs.iterator();
 		while ( it.hasNext() ) {
-			e = it.next();
-			if ( ! arcs.contains( e ) ) {
+			tmp = it.next();
+			e = new ArcFlow(
+				nodeMap.get( tmp.origine ),
+				nodeMap.get( tmp.destination ),
+				tmp.getCout(),
+				0
+			);
+			if ( ! contains( e ) ) {
+				System.out.print( e + "\t: " );
 				add( e );
-				if ( e.getCout() + e.getOrigine().getDegree() < e.getDestination().getDegree() &&
-						isCyclicNoSens() ) {
-					remove( e );
-					return e;
+				System.out.print( e.getOrigine().getPrice() + " + " + e.getCout() + " < " + e.getDestination().getPrice() + " " );
+				if ( e.getOrigine().getPrice() + e.getCout() < e.getDestination().getPrice() ) {
+					if ( isCyclicNoSens() ) {
+						System.out.println( "arc entrant : " + e );
+						remove( e );
+						return e;
+					} else {
+						System.out.println( "non cyclique" );
+					}
+				} else {
+					System.out.println( "pas rentable" );
 				}
 				remove( e );
 			}
 		}
+		System.out.println( "Pas d'arc entrant." );
 		return null;
+	}
+
+	@Override
+	public boolean remove( final ArcFlow arc ) throws IllegalArgumentException {
+		final LinkedList<Arc<?>> keys = new LinkedList<>();
+		arcMap.forEach(new BiConsumer<Arc<?>, ArcFlow>() {
+
+			@Override
+			public void accept(Arc<?> arg0, ArcFlow arg1) {
+				if ( arg1.equals( arc ) ) {
+					keys.add( arg0 );
+				}
+			}
+		});
+		for ( Arc<?> key: keys ) {
+			arcMap.remove( key );
+		}
+		return super.remove( arc );
+	}
+	
+	@Override
+	public boolean add( NodeFlow S ) throws IllegalArgumentException {
+		nodeMap.put( null, S );
+		return super.add(S);
 	}
 
 	private Set<ArcFlow> isolateCycle() {
@@ -101,29 +148,49 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	}
 
 	private void updatePrice() {
-		NodeFlow node = (NodeFlow) nodes.toArray()[0];
-		node.setPrice( 0 );
-		runPrefix( node, new FunctionNode<NodeFlow>() {
-			@Override
-			public void accept( NodeFlow S ) {
-				for ( ArcFlow arc: outArcs( S ) ) {
-					arc.destination.setPrice( S.getPrice() + arc.getCout() );
-				}
-			}
-
-			@Override
-			public NodeFlow next( NodeFlow node, Set<NodeFlow> visited ) {
-				Set<NodeFlow> neighbours;
-				for ( NodeFlow n: visited ) {
-					neighbours = neighboursLocal( n );
-					neighbours.removeAll( visited );
-					for ( NodeFlow nf: neighbours ) {
-						return nf;
+		for ( NodeFlow node : nodes ) {
+			node.setPrice( 0 );
+		}
+		System.out.println( "mise à jour des prix." );
+		final LinkedList<ArcFlow> visited = new LinkedList<>();
+		for ( ArcFlow arc: arcs ) {
+			if ( ! visited.contains( arc ) ) {
+				runPrefix( arc, new FunctionArc<ArcFlow>() {
+					@Override
+					public void accept( ArcFlow arc ) {
+						System.out.print( "mise à jour de \"" + arc.destination.getPrice() + "\" -> " + arc.getOrigine().getPrice() + " + " + arc.getCout() + " = " );
+						arc.destination.setPrice( arc.getOrigine().getPrice() + arc.getCout() );
+						System.out.println( arc.destination.getPrice() );
+						visited.add( arc );
 					}
-				}
-				return null;
+
+					@Override
+					public ArcFlow next( ArcFlow arc, Set<ArcFlow> v ) {
+						Set<ArcFlow> neighbours;
+						System.out.println( "next arc \"" + arc + "\"" );
+						
+						for ( ArcFlow a: visited ) {
+							neighbours = inOutArcsLocal( a.destination );
+							neighbours.addAll( inOutArcsLocal( a.origine ) );
+							neighbours.removeAll( visited );
+							for ( ArcFlow af: neighbours ) {
+								System.out.println( af );
+								return af;
+							}
+						}
+						System.out.println( "aucun" );
+						return null;
+					}
+				} );
 			}
-		} );
+		}
+		for ( ArcFlow arc: arcs ) {
+			System.out.println( arc.getDestination() + "\t" + arc.getDestination().getPrice() );
+			System.out.println( arc.getOrigine() + "\t" + arc.getOrigine().getPrice() );
+		}
+		for ( NodeFlow node: nodes ) {
+			System.out.println( node + "\t" + node.getPrice() );
+		}
 	}
 
 	private void updateFlow( ArcFlow e ) {
@@ -200,9 +267,9 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 				degree = node.getDegree();
 				weight = Math.abs( degree );
 				if ( degree > 0 ) {
-					add( new ArcFlow( bestNode, node, weight ) );
+					add( new ArcFlow( bestNode, node, weight, 1 ) );
 				} else {
-					add( new ArcFlow( node, bestNode, weight ) );
+					add( new ArcFlow( node, bestNode, weight, 1 ) );
 				}
 			}
 		}
@@ -313,7 +380,7 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		}
 		return -total;
 	}
-	
+
 	public int degreeTotal() {
 		int total = 0;
 		for ( NodeFlow S: nodes ) {
@@ -321,13 +388,13 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		}
 		return total;
 	}
-	
+
 	@Override
 	protected GraphFlow clone() {
-		Graph<NodeInt, Arc<NodeInt>> origine = new Graph<>();
-		origine.add( origine.arcs );
-		origine.add( origine.nodes );
+		Graph<NodeFlow, ArcFlow> tmp = super.clone();
 		GraphFlow g = new GraphFlow();
+		g.add( tmp.nodes );
+		g.add( tmp.arcs );
 		return g;
 	}
 }

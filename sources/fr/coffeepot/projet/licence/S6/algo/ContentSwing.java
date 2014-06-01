@@ -1,5 +1,6 @@
 package fr.coffeepot.projet.licence.S6.algo;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -12,18 +13,20 @@ import java.awt.image.BufferedImage;
 import java.util.Set;
 
 import fr.upem.pperonne.caterer.Arc;
+import fr.upem.pperonne.caterer.ArcFlow;
 import fr.upem.pperonne.caterer.Graph;
 import fr.upem.pperonne.caterer.Node;
+import fr.upem.pperonne.caterer.NodeFlow;
 
 @SuppressWarnings({ "serial", "rawtypes" })
-public class ContentSwing extends Container implements MouseMotionListener {
-	private final Graph<?,?> graph;
+public class ContentSwing<G extends Graph<? extends Node<?>,? extends Arc<?>>> extends Container implements MouseMotionListener {
+	private final G graph;
 	private int /*poidsMax, poidsMin,*/ coutMax;
 	private Point min = new Point( 0, 0 ), max = new Point( 1, 1 );
 	private static Dimension dimensionSommet = new Dimension( 30, 20 );
 	private String title;
 
-	public ContentSwing( final Graph<?,?> graph, String title ) {
+	public ContentSwing( final G graph, String title ) {
 		this.graph = graph;
 		this.title = title;
 	}
@@ -42,23 +45,40 @@ public class ContentSwing extends Container implements MouseMotionListener {
 
 	private boolean hasNode( Node S ) {
 		for ( Component component: getComponents() ) {
-			if ( component instanceof DisplayNode && ((DisplayNode) component).isNode( S ) ) {
+			if ( component instanceof NodeSwing && ((NodeSwing) component).isNode( S ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private DisplayNode updateList( Node S ) {
+	private NodeSwing getComponent( Node S ) {
+		for ( Component component: getComponents() ) {
+			if ( component instanceof NodeSwing && ((NodeSwing) component).isNode( S ) ) {
+				return (NodeSwing) component;
+			}
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private NodeSwing updateList( Node S ) {
 		if ( ! hasNode( S ) ) {
-			DisplayNode ds = new DisplayNode( S, getSize() );
+			NodeSwing ds;
+			if ( S instanceof NodeFlow ) {
+				ds = new NodeFlowSwing( (NodeFlow) S, getSize() );
+			} else {
+				ds = new NodeSwing( S, getSize() );
+			}
 			ds.addMouseMotionListener( this );
 			add( ds );
 			ds.setSize( dimensionSommet );
 			mouseDragged( new MouseEvent( ds, MouseEvent.MOUSE_DRAGGED, 0, MouseEvent.NOBUTTON, 0, 0, 0, false, MouseEvent.BUTTON1 ) );
 			return ds;
+		} else {
+			getComponent( S ).update( S );
 		}
-		return getDisplayNode( S );
+		return getNodeSwing( S );
 	}
 /*
 	private void updateMinMaxPoids( int poids ) {
@@ -76,7 +96,7 @@ public class ContentSwing extends Container implements MouseMotionListener {
 	/*	poidsMax = 0;
 		poidsMin = 1;
 	*/	min = max = null;
-		DisplayNode ds;
+		NodeSwing ds;
 		for ( Node S: graph.getNodes() ) {
 			ds = updateList( S );
 			updateMinMaxCoords( ds.getLocation() );
@@ -107,18 +127,17 @@ public class ContentSwing extends Container implements MouseMotionListener {
 		graphics.drawImage( img, 0, 0, this );
 	}
 
-	private DisplayNode getDisplayNode( Node S ) throws IllegalArgumentException {
+	protected NodeSwing getNodeSwing( Node S ) throws IllegalArgumentException {
 		for ( Component component: getComponents() ) {
-			if ( component instanceof DisplayNode &&
-					((DisplayNode) component).isNode( S )
+			if ( component instanceof NodeSwing &&
+					((NodeSwing) component).isNode( S )
 				) {
-				return (DisplayNode) component;
+				return (NodeSwing) component;
 			}
 		}
 		throw new IllegalArgumentException( "Le sommet n'a pas encore été enregistré" );
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	private void paintArcs(
 			Graphics graphics,
 			Set<Arc> set
@@ -132,9 +151,9 @@ public class ContentSwing extends Container implements MouseMotionListener {
 		}
 	}
 
-	private void paintArc( Graphics graphics, Arc<Node> arc ) throws IllegalArgumentException {
-		DisplayNode origine = getDisplayNode( arc.getOrigine() ),
-			destination = getDisplayNode( arc.getDestination() );
+	protected void paintArc( Graphics graphics, Arc<?> arc ) throws IllegalArgumentException {
+		NodeSwing origine = getNodeSwing( arc.getOrigine() ),
+			destination = getNodeSwing( arc.getDestination() );
 		Dimension dimensionOri = origine.getSize(),
 			dimensionDest = destination.getSize();
 		Point pointOri = origine.getLocation(),
@@ -153,8 +172,22 @@ public class ContentSwing extends Container implements MouseMotionListener {
 			0,
 			name.length,
 			( pointOri.x + pointDest.x ) / 2,
-			( pointOri.y + pointDest.y ) / 2
+			( pointOri.y + pointDest.y ) / 2 - 10
 		);
+		if ( arc instanceof ArcFlow ) {
+			String flow = new String( ((ArcFlow) arc).getFlow() + "" );
+			Color color = graphics.getColor();
+			graphics.setColor( Color.CYAN );
+			name = flow.toCharArray();
+			graphics.drawChars(
+				name,
+				0,
+				name.length,
+				( pointOri.x + pointDest.x ) / 2,
+				( pointOri.y + pointDest.y ) / 2 + 10
+			);
+			graphics.setColor( color );
+		}
 	}
 
 	@Override
@@ -176,8 +209,8 @@ public class ContentSwing extends Container implements MouseMotionListener {
 	@Override
 	public void mouseDragged( MouseEvent e ) {
 		Object o = e.getSource();
-		if ( o instanceof DisplayNode ) {
-			DisplayNode ds = (DisplayNode) o;
+		if ( o instanceof NodeSwing ) {
+			NodeSwing ds = (NodeSwing) o;
 			Dimension dim = ds.getSize();
 			Point position = ds.getLocation();
 			Dimension limit = getSize();

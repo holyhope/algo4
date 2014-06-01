@@ -23,15 +23,15 @@ public class NodeFlow extends NodeInt {
 
 	@Override
 	public NodeFlow clone() {
-		NodeFlow nf = new NodeFlow( getDegree() );
+		NodeFlow nf = new NodeFlow( getDegree(), getPrice() );
 		clone( nf );
 		return nf;
 	}
-	
+
 	public void setPrice( int price ) {
 		this.price = price;
 	}
-	
+
 	public int getPrice() {
 		return price;
 	}

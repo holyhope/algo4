@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 @SuppressWarnings("rawtypes")
 public class Arc<N extends Node<?>> {
-	protected final N origine;
+	protected N origine;
 	protected N destination;
 	private int cout;
 

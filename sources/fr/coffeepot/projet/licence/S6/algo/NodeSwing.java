@@ -13,14 +13,15 @@ import javax.swing.JComponent;
 import fr.upem.pperonne.caterer.Node;
 
 @SuppressWarnings({ "serial", "rawtypes" })
-public class DisplayNode extends JComponent implements MouseListener {
-	private final Node node;
+public class NodeSwing<N extends Node> extends JComponent implements MouseListener {
+	private final N node;
+	protected char[] name;
 	private static Color defaultColor = Color.WHITE;
-	private static Color overColor = Color.PINK;
-	private static Color clickColor = Color.RED;
+	private static Color overColor = Color.YELLOW;
+	private static Color clickColor = Color.ORANGE;
 	private Color color = defaultColor;
 
-	public DisplayNode( Node node, Dimension range ) throws IllegalArgumentException {
+	public NodeSwing( N node, Dimension range ) throws IllegalArgumentException {
 		if ( node == null ) {
 			throw new IllegalArgumentException( "Impossible d'afficher un sommet null." );
 		}
@@ -31,14 +32,21 @@ public class DisplayNode extends JComponent implements MouseListener {
 			rand.nextInt( range.height )
 		) );
 		addMouseListener( this );
+		String name = "";
+		this.name = name.toCharArray();
 	}
 
 	@Override
 	public boolean equals( Object o ) {
-		if ( ! ( o instanceof DisplayNode ) ) {
+		if ( ! ( o instanceof NodeSwing ) ) {
 			return false;
 		}
-		return node.equals( ((DisplayNode) o).node );
+		return node.equals( ((NodeSwing) o).node );
+	}
+	
+	public void update( N node ) {
+		String degree = new String( node.get() + "" );
+		name = degree.toCharArray();
 	}
 
 	@Override
@@ -55,8 +63,6 @@ public class DisplayNode extends JComponent implements MouseListener {
 			dimensionSommet.height
 		);
 
-		String poids = new String( node.get() + "" );
-		char[] name = poids.toCharArray();
 		graphics.setColor( def );
 		int width = graphics.getFontMetrics().charsWidth( name, 0, name.length );
 		graphics.drawChars(

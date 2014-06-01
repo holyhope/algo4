@@ -7,22 +7,26 @@ public class ArcFlow extends Arc<NodeFlow> {
 			NodeFlow origine,
 			NodeFlow destination,
 			int cout,
+			int flow,
 			int capacity
 		) throws IllegalArgumentException {
-		this( origine, destination, cout );
+		this( origine, destination, cout, flow );
 		this.max = capacity;
 	}
 
 	public ArcFlow(
 			NodeFlow origine,
 			NodeFlow destination,
-			int cout
+			int cout,
+			int flow
 		) throws IllegalArgumentException {
 		super( origine, destination, cout );
+		this.flow = flow;
 	}
 
-	public ArcFlow( Arc<NodeFlow> arc ) {
+	public ArcFlow( Arc<NodeFlow> arc, int flow ) {
 		super( arc );
+		this.flow = flow;
 	}
 
 	public int getCapacity() {
@@ -39,7 +43,9 @@ public class ArcFlow extends Arc<NodeFlow> {
 	
 	@Override
 	protected ArcFlow clone() {
-		return new ArcFlow( getOrigine(), getDestination(), getCout(), max );
+		ArcFlow a = new ArcFlow( getOrigine(), getDestination(), getCout(), getFlow(), max );
+		a.flow = flow;
+		return a;
 	}
 	
 	public void setMax( Integer max ) {

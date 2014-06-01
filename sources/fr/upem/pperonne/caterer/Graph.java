@@ -490,6 +490,49 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return path;
 	}
 
+	public PathArc<A> smallestPathNoSens( N origine, N dest ) {
+		PathArc<A> path = null;
+		Set<A> out = outArcs( origine );
+		A first = null;
+
+		for ( A arc: out ) {
+			if ( arc.getDestination().equals( dest ) || arc.getOrigine().equals(dest) ) {
+				if ( first == null || first.getCout() > arc.getCout() ) {
+					first = arc;
+				}
+			}
+		}
+		if ( first != null ) {
+			path = new PathArc<>();
+			path.add( first );
+			return path;
+		}
+
+		PathArc<A> subPath;
+		int cout, coutMinimal = 0;
+		for ( A arc: out ) {
+			if(arc.getOrigine().equals(origine)){
+				subPath = smallestPath( arc.destination, dest );
+			}
+			else subPath = smallestPath( arc.origine, dest );
+			if ( subPath.size() > 0 ) {
+				cout = subPath.getCout() + arc.getCout();
+				if ( path == null || cout < coutMinimal ) {
+					path = new PathArc<>();
+					path.add( arc );
+					path.addAll( subPath );
+					coutMinimal = cout;
+				}
+			}
+		}
+
+		if ( path == null ) {
+			return new PathArc<>();
+		}
+
+		return path;
+	}
+
 	@SuppressWarnings("rawtypes")
 	public Set<Arc> getArcs() {
 		Set<Arc> list = new HashSet<>();
@@ -508,7 +551,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		return list;
 	}
 	
-	protected N get( N node ) throws NullPointerException {
+	public N get( N node ) throws NullPointerException {
 		Objects.requireNonNull( node );
 		for ( N S: nodes ) {
 			if ( node.equals( S ) ) {

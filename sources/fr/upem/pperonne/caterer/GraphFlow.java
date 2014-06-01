@@ -152,37 +152,44 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 			node.setPrice( 0 );
 		}
 		System.out.println( "mise à jour des prix." );
-		final LinkedList<ArcFlow> visited = new LinkedList<>();
-		for ( ArcFlow arc: arcs ) {
-			if ( ! visited.contains( arc ) ) {
-				runPrefix( arc, new FunctionArc<ArcFlow>() {
-					@Override
-					public void accept( ArcFlow arc ) {
-						System.out.print( "mise à jour de \"" + arc.destination.getPrice() + "\" -> " + arc.getOrigine().getPrice() + " + " + arc.getCout() + " = " );
-						arc.destination.setPrice( arc.getOrigine().getPrice() + arc.getCout() );
-						System.out.println( arc.destination.getPrice() );
-						visited.add( arc );
+		for ( NodeFlow node: nodes ) {
+			System.out.println( "Début du parcours par le noeud " + node);
+			node.setPrice( 0 );
+			runPrefix( node, new FunctionNode<NodeFlow>() {
+				private ArcFlow arc;
+	
+				@Override
+				public void accept( NodeFlow S ) {
+					System.out.println( S );
+					if ( arc != null ) {
+						if ( S.equals( arc.destination ) ) {
+							S.setPrice( arc.origine.getPrice() + arc.getCout() );
+						} else {
+							S.setPrice( arc.destination.getPrice() - arc.getCout() );
+						}
 					}
-
-					@Override
-					public ArcFlow next( ArcFlow arc, Set<ArcFlow> v ) {
-						Set<ArcFlow> neighbours;
-						System.out.println( "next arc \"" + arc + "\"" );
-						
-						for ( ArcFlow a: visited ) {
-							neighbours = inOutArcsLocal( a.destination );
-							neighbours.addAll( inOutArcsLocal( a.origine ) );
-							neighbours.removeAll( visited );
-							for ( ArcFlow af: neighbours ) {
-								System.out.println( af );
-								return af;
+				}
+	
+				@Override
+				public NodeFlow next( NodeFlow S, Set<NodeFlow> visited ) {
+					Set<ArcFlow> arcs;
+					for ( NodeFlow node: visited ) {
+						arcs = outArcsLocal( node );
+						for ( ArcFlow arc: arcs ) {
+							if ( ! visited.contains( arc.destination ) ) {
+								return arc.destination;
 							}
 						}
-						System.out.println( "aucun" );
-						return null;
+						arcs = inArcsLocal( node );
+						for ( ArcFlow arc: arcs ) {
+							if ( ! visited.contains( arc.origine ) ) {
+								return arc.origine;
+							}
+						}
 					}
-				} );
-			}
+					return null;
+				}
+			} );
 		}
 		for ( ArcFlow arc: arcs ) {
 			System.out.println( arc.getDestination() + "\t" + arc.getDestination().getPrice() );

@@ -102,16 +102,21 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	}
 
 	private Set<ArcFlow> isolateCycle() {
-		Set<ArcFlow> useless = new HashSet<>();
-		for ( ArcFlow arc: arcs ) {
-			remove( arc );
+		Set<ArcFlow> useless = new HashSet<>(),
+				usefull = new HashSet<>();
+		Iterator<ArcFlow> it = arcs.iterator();
+		ArcFlow arc;
+		while ( it.hasNext() ) {
+			arc = it.next();
+			it.remove();
 			if ( ! isCyclicNoSens() ) {
-				add( arc );
+				usefull.add( arc );
 			} else {
 				useless.add( arc );
 			}
 		}
-		remove( useless );
+		add( usefull );
+		add( useless );
 		return useless;
 	}
 

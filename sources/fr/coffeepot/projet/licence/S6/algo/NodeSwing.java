@@ -28,8 +28,8 @@ public class NodeSwing<N extends Node> extends JComponent implements MouseListen
 		this.node = node;
 		Random rand = new Random();
 		setLocation( new Point(
-			rand.nextInt( range.width ),
-			rand.nextInt( range.height )
+			rand.nextInt( range.width - 2 ) + 1,
+			rand.nextInt( range.height - 2 ) + 1
 		) );
 		addMouseListener( this );
 		String name = "";

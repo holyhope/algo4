@@ -140,6 +140,10 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 	public <E> E next( E o, Set<E> visited ) throws IllegalStateException {
 		Node dest;
 
+		if ( o == null ) {
+			return null;
+		}
+		
 		if ( o instanceof Node ) {
 			for ( A arc: outArcsLocal( (N) o ) ) {
 				dest = arc.getDestination();
@@ -154,7 +158,7 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 				}
 			}
 		} else {
-			throw new IllegalStateException( "Impossible de chercher l'objet suivant." );
+			throw new IllegalStateException( "Impossible de chercher l'objet suivant." + o );
 		}
 
 		return null;
@@ -513,6 +517,54 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 
 		return path;
+	}
+
+	protected PathArc<A> smallestPathNoSensLocal( N origine, N dest ) {
+		PathArc<A> path = null;
+		Set<A> inOut = inOutArcsLocal( origine );
+		A first = null;
+
+		for ( A arc: inOut ) {
+			if ( arc.destination.equals( dest ) || arc.origine.equals( dest ) ) {
+				if ( first == null || first.getCout() > arc.getCout() ) {
+					first = arc;
+				}
+			}
+		}
+		if ( first != null ) {
+			path = new PathArc<>();
+			path.add( first );
+			return path;
+		}
+
+		PathArc<A> subPath;
+		int cout, coutMinimal = Integer.MAX_VALUE;
+		for ( A arc: inOut ) {
+			if ( arc.origine.equals( origine ) ) {
+				subPath = smallestPathNoSensLocal( arc.destination, dest );
+			} else {
+				subPath = smallestPathNoSensLocal( arc.origine, dest );
+			}
+			if ( subPath.size() > 0 ) {
+				cout = subPath.getCout() + arc.getCout();
+				if ( path == null || cout < coutMinimal ) {
+					path = new PathArc<>();
+					path.add( arc );
+					path.addAll( subPath );
+					coutMinimal = cout;
+				}
+			}
+		}
+
+		if ( path == null ) {
+			return new PathArc<>();
+		}
+
+		return path;
+	}
+
+	public PathArc<A> smallestPathNoSens( N origine, N dest ) {
+		return smallestPathNoSensLocal( origine, dest ).clone();
 	}
 
 	@SuppressWarnings("rawtypes")

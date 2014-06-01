@@ -1,6 +1,7 @@
 package fr.upem.pperonne.caterer;
 
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings({ "serial", "rawtypes" })
 public class PathArc<A extends Arc> extends ArrayList<A> {
@@ -86,5 +87,15 @@ public class PathArc<A extends Arc> extends ArrayList<A> {
 			throw new IllegalArgumentException( "L'arc ne peut pas se positionner à cet endroit." );
 		}
 		super.add( index, arc );
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public PathArc<A> clone() {
+		PathArc<A> path = new PathArc<>();
+		for ( A arc: this ) {
+			path.add( (A) arc.clone() );
+		}
+		return path;
 	}
 }

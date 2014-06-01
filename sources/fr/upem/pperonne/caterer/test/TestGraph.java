@@ -19,6 +19,7 @@ import fr.upem.pperonne.caterer.Arc;
 import fr.upem.pperonne.caterer.FunctionNode;
 import fr.upem.pperonne.caterer.Graph;
 import fr.upem.pperonne.caterer.Node;
+import fr.upem.pperonne.caterer.PathArc;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class TestGraph extends Graph {
@@ -85,6 +86,27 @@ public class TestGraph extends Graph {
 		};
 		G.runPrefix( f );
 		assertArrayEquals( result, list.toArray() );
+	}
+	
+	@Test
+	public void smallestPathNoSensLocal() {
+		final Graph G = init( 5 );
+		final Set<Node> list = new HashSet<>();
+		List<Node> nodes = getNodesLocalTest( G );
+		G.add( new Arc<>( nodes.get( 0 ), nodes.get( 1 ) ) );
+		G.add( new Arc<>( nodes.get( 1 ), nodes.get( 2 ) ) );
+		G.add( new Arc<>( nodes.get( 2 ), nodes.get( 3 ) ) );
+		G.add( new Arc<>( nodes.get( 1 ), nodes.get( 0 ) ) );
+		G.add( new Arc<>( nodes.get( 0 ), nodes.get( 4 ) ) );
+		G.add( new Arc<>( nodes.get( 4 ), nodes.get( 2 ) ) );
+		List<Arc<Node>> arcs = getArcsLocalTest( G );
+		PathArc<Arc<Node>> result = new PathArc();
+		result.add( arcs.get( 0 ) );
+		result.add( arcs.get( 1 ) );
+		result.add( arcs.get( 2 ) );
+		
+		PathArc<Arc> path = G.smallestPathNoSens( nodes.get( 0 ), nodes.get( 2 ) );
+		assertEquals( result, path );
 	}
 
 	@Test
@@ -252,6 +274,12 @@ public class TestGraph extends Graph {
 	private List<Node> getNodesLocalTest( Graph G ) {
 		List<Node> list = new ArrayList<>();
 		list.addAll( G.getNodes() );
+		return list;
+	}
+
+	private List<Arc<Node>> getArcsLocalTest( Graph G ) {
+		List<Arc<Node>> list = new ArrayList<>();
+		list.addAll( G.getArcs() );
 		return list;
 	}
 

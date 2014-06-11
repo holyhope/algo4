@@ -1,6 +1,11 @@
 package fr.upem.pperonne.caterer;
 
-
+/**
+ * classe sur la structure des noeud de flots
+ * @author pierre 
+ * @author jeremy
+ *
+ */
 public class NodeFlow extends NodeInt {
 	private int price = 0;
 

@@ -10,7 +10,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
-
+/**
+ * classe pour les graphe generale orienté
+ * @author pierre
+ * @author jeremy
+ *
+ * @param <N>
+ * @param <A>
+ */
 public class Graph <N extends Node<?>,A extends Arc<N>> {
 	protected HashSet<N> nodes = new HashSet<N>();
 	protected HashSet<A> arcs = new HashSet<A>();
@@ -107,11 +114,19 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 		}
 		return flag;
 	}
-
+	/**
+	 * renvoi vrai si l'element a est dans la collection
+	 * @param a
+	 * @return
+	 */
 	public boolean contains( A a ) {
 		return arcs.contains( a );
 	}
-
+	/**
+	 * renvo vrai si l'element n est dans la collection
+	 * @param n
+	 * @return
+	 */
 	public boolean contains( N n ) {
 		return nodes.contains( n );
 	}
@@ -176,11 +191,16 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 
 		return arcs;
 	}
-
+	/**
+	 * renvoi la liste des arcs entrant et sortant du noeud node
+	 * @param node
+	 * @return
+	 */
 	protected HashSet<A> inOutArcsLocal( N node ) {
+		System.out.println("le noued et "+node);
 		HashSet<A> arcs = inArcsLocal( node );
 		arcs.addAll( outArcsLocal( node ) );
-
+		System.out.println(arcs.size());
 		return arcs;
 	}
 
@@ -555,11 +575,10 @@ public class Graph <N extends Node<?>,A extends Arc<N>> {
 				}
 			}
 		}
-
 		if ( path == null ) {
 			return new PathArc<>();
 		}
-
+		System.out.println(path);
 		return path;
 	}
 

@@ -2,6 +2,12 @@ package fr.upem.pperonne.caterer;
 
 import java.util.Scanner;
 
+/**
+ * structure sur les noeud d'entier
+ * @author pierre
+ * @author jeremy
+ *
+ */
 public class NodeInt extends Node<Integer> {
 	public NodeInt( Scanner scan ) throws IllegalArgumentException {
 		super();

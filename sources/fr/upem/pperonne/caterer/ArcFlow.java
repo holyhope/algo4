@@ -1,5 +1,10 @@
 package fr.upem.pperonne.caterer;
-
+/**
+ * classe sur les arc contenant des flots
+ * @author pierre 
+ * @author jeremy
+ *
+ */
 public class ArcFlow extends Arc<NodeFlow> {
 	private Integer max = Integer.MAX_VALUE, flow = 0;
 

@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
-
+/**
+ * classe pour les graphe de flot
+ * @author pierre
+ * @author jeremy
+ * 
+ */
 public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	private final Graph<NodeInt, Arc<NodeInt>> origine;
 	private HashMap<Node<?>, NodeFlow> nodeMap = new HashMap<>();
@@ -41,7 +45,12 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 	}
 
 	private GraphFlow() { origine = null; }
-
+	/**
+	 * fonction portant sur la recherche de l'arc entrant: 
+	 * c'est a dire un arc qui ameliore la solution finale,elle renvoi l'arc trouver sans l'ajouter dans le graphe
+	 * on utilise un iterator pour parcourir l'ensemble des arcs
+	 * @return
+	 */
 	private ArcFlow findArcE() {
 		System.out.println( "On trouve l'arc entrant." );
 		ArcFlow e;
@@ -57,12 +66,10 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 					);
 			if ( ! contains( e ) ) {
 				System.out.print( e + "\t: " );
-				add( e );
 				System.out.print( e.getOrigine().getPrice() + " + " + e.getCout() + " < " + e.getDestination().getPrice() + " " );
 				if ( e.getOrigine().getPrice() + e.getCout() < e.getDestination().getPrice() ) {
 					if ( isCyclicNoSens() ) {
 						System.out.println( "arc entrant : " + e );
-						remove( e );
 						return e;
 					} else {
 						System.out.println( "non cyclique" );
@@ -70,7 +77,6 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 				} else {
 					System.out.println( "pas rentable" );
 				}
-				remove( e );
 			}
 		}
 		System.out.println( "Pas d'arc entrant." );
@@ -100,9 +106,15 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		nodeMap.put( null, S );
 		return super.add(S);
 	}
-
+	/**
+	 * fonction de recherche de l'arc sortant
+	 * on parcourt le chemin entre les deux noeud de l'arc entrant afin de determiner l'arc a supprimer
+	 * @param e
+	 * @return
+	 */
 	private ArcFlow findArcF( ArcFlow e ) {
 		ArcFlow f = null;
+		System.out.println("noeud origine  dest "+e.origine+" "+e.destination);
 		PathArc<ArcFlow> path = smallestPathNoSensLocal( e.destination, e.origine );
 
 		int min = Integer.MAX_VALUE, flow;
@@ -146,7 +158,10 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 */
 		return f;
 	}
-
+	/**
+	 * fonction de mise a jour des prix
+	 * on part d'un noued au hasard et on met son prix a zero et on met a jour les autre noueds
+	 */
 	private void updatePrice() {
 		for ( NodeFlow node : nodes ) {
 			node.setPrice( 0 );
@@ -196,6 +211,10 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		}
 	}
 
+	/**
+	 * mise a jour des flow du graphe apres avoir trouver une solution
+	 * @param e
+	 */
 	private void updateFlow( ArcFlow e ) {
 		PathArc<ArcFlow> path = smallestPathNoSensLocal( e.destination, e.origine );
 		NodeFlow dest = e.destination;
@@ -211,6 +230,9 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		}
 	}
 
+	/**
+	 * fonction qui determine l'etape 0 de l'algorithme et nous donnée une solution initiale
+	 */
 	public void firstSolution() {
 		// weight --> modifierPoidsArcs
 		int result = 0;
@@ -265,7 +287,10 @@ public class GraphFlow extends Graph<NodeFlow,ArcFlow> implements Runnable {
 		}
 		updatePrice();
 	}
-
+	/**
+	 * fonction de boucle qui renvoi faux si la solution et optimal sinon renvoi vrai et met a jour le graphe
+	 * @return
+	 */
 	public boolean nextIteration() {
 		ArcFlow e = findArcE(), f;
 		if ( e == null ) {

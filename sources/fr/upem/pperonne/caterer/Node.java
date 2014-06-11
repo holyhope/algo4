@@ -1,7 +1,13 @@
 package fr.upem.pperonne.caterer;
 
 import java.util.UUID;
-
+/**
+ * classe sur la structure des noeuds
+ * @author pierre 
+ * @author jeremy
+ *
+ * @param <O>
+ */
 public class Node<O extends Object> {
 	private String name = defaultName;
 	private O degree = null;
